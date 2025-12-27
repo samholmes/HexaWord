@@ -6,9 +6,109 @@ import { z } from "zod";
 import { HexCell } from "@shared/schema";
 
 const WORDS_POOL = [
+  // Technology
   "REACT", "TYPESCRIPT", "NODE", "EXPRESS", "VITE", 
   "TAILWIND", "DRIZZLE", "POSTGRES", "REPLIT", "CODING", 
-  "DEBUG", "DEPLOY", "COMPONENT", "HOOK", "STATE"
+  "DEBUG", "DEPLOY", "COMPONENT", "HOOK", "STATE",
+  "JAVASCRIPT", "PYTHON", "JAVA", "DATABASE", "NETWORK",
+  "SERVER", "CLIENT", "API", "CACHE", "QUERY",
+  "FUNCTION", "VARIABLE", "COMPILE", "RUNTIME", "KERNEL",
+  "BROWSER", "SOFTWARE", "HARDWARE", "MEMORY", "PROCESSOR",
+  
+  // Animals
+  "LION", "TIGER", "ELEPHANT", "BEAR", "WOLF",
+  "EAGLE", "PENGUIN", "DOLPHIN", "SHARK", "WHALE",
+  "ZEBRA", "GIRAFFE", "MONKEY", "RABBIT", "DEER",
+  "SNAKE", "TURTLE", "FISH", "BIRD", "CAT",
+  "DOG", "HORSE", "COW", "PIG", "SHEEP",
+  "PANDA", "KOALA", "OTTER", "FOX", "BADGER",
+  
+  // Food & Drink
+  "APPLE", "BANANA", "ORANGE", "GRAPE", "LEMON",
+  "BREAD", "CHEESE", "BUTTER", "MILK", "YOGURT",
+  "PIZZA", "PASTA", "RICE", "BEANS", "CORN",
+  "CARROT", "ONION", "GARLIC", "LETTUCE", "TOMATO",
+  "MEAT", "FISH", "CHICKEN", "BEEF", "PORK",
+  "CHOCOLATE", "COOKIE", "CAKE", "CANDY", "COFFEE",
+  "TEA", "JUICE", "WATER", "WINE", "BEER",
+  
+  // Nature & Geography
+  "MOUNTAIN", "FOREST", "RIVER", "OCEAN", "DESERT",
+  "BEACH", "ISLAND", "VALLEY", "CANYON", "GLACIER",
+  "VOLCANO", "LAKE", "POND", "CREEK", "WATERFALL",
+  "TREE", "FLOWER", "GRASS", "MOSS", "FERN",
+  "SUN", "MOON", "STAR", "CLOUD", "RAIN",
+  "SNOW", "WIND", "STORM", "THUNDER", "LIGHTNING",
+  
+  // Sports
+  "SOCCER", "FOOTBALL", "BASKETBALL", "BASEBALL", "TENNIS",
+  "HOCKEY", "RUGBY", "CRICKET", "GOLF", "BOWLING",
+  "SWIMMING", "RUNNING", "JUMPING", "SKIING", "BOXING",
+  "WRESTLING", "ARCHERY", "CYCLING", "SKATING", "CLIMBING",
+  
+  // Colors
+  "RED", "BLUE", "GREEN", "YELLOW", "ORANGE",
+  "PURPLE", "PINK", "BROWN", "BLACK", "WHITE",
+  "GRAY", "SILVER", "GOLD", "CYAN", "MAGENTA",
+  
+  // Body Parts
+  "HEAD", "HAND", "FOOT", "HEART", "BRAIN",
+  "EYES", "EARS", "NOSE", "MOUTH", "TEETH",
+  "ARM", "LEG", "BACK", "CHEST", "STOMACH",
+  "FINGER", "THUMB", "TOE", "NAIL", "BONE",
+  
+  // Objects & Tools
+  "HAMMER", "KNIFE", "FORK", "SPOON", "PLATE",
+  "CHAIR", "TABLE", "DOOR", "WINDOW", "WALL",
+  "LAMP", "MIRROR", "CLOCK", "BOOK", "PENCIL",
+  "PEN", "PAPER", "PAINT", "BRUSH", "ROPE",
+  "BALL", "TOY", "DOLL", "PUZZLE", "GAME",
+  
+  // Professions
+  "DOCTOR", "NURSE", "TEACHER", "LAWYER", "ENGINEER",
+  "ARTIST", "ACTOR", "SINGER", "DANCER", "WRITER",
+  "COOK", "WAITER", "PILOT", "CAPTAIN", "SOLDIER",
+  "POLICE", "FARMER", "BUILDER", "MECHANIC", "MANAGER",
+  
+  // Weather & Seasons
+  "SUMMER", "WINTER", "SPRING", "AUTUMN", "SUNNY",
+  "RAINY", "CLOUDY", "WINDY", "COLD", "HOT",
+  "WARM", "COOL", "FREEZING", "HUMID", "DRY",
+  
+  // Emotions & Feelings
+  "HAPPY", "SAD", "ANGRY", "SCARED", "EXCITED",
+  "TIRED", "SLEEPY", "HUNGRY", "THIRSTY", "NERVOUS",
+  "BRAVE", "CALM", "QUIET", "LOUD", "SILENT",
+  
+  // Numbers & Shapes
+  "CIRCLE", "SQUARE", "TRIANGLE", "RECTANGLE", "DIAMOND",
+  "OVAL", "SPHERE", "CUBE", "PYRAMID", "CYLINDER",
+  
+  // Actions & Verbs
+  "JUMP", "WALK", "RUN", "FLY", "SWIM",
+  "DANCE", "SING", "LAUGH", "CRY", "SLEEP",
+  "EAT", "DRINK", "READ", "WRITE", "DRAW",
+  "PAINT", "BUILD", "BREAK", "CATCH", "THROW",
+  "KICK", "PUSH", "PULL", "CLIMB", "FALL",
+  
+  // Adjectives
+  "BIG", "SMALL", "TALL", "SHORT", "LONG",
+  "FAST", "SLOW", "HARD", "SOFT", "ROUGH",
+  "SMOOTH", "SHARP", "DULL", "BRIGHT", "DARK",
+  "HEAVY", "LIGHT", "THICK", "THIN", "WIDE",
+  
+  // Musical Instruments
+  "PIANO", "GUITAR", "VIOLIN", "DRUMS", "TRUMPET",
+  "FLUTE", "HARP", "HORN", "ORGAN", "CELLO",
+  
+  // Vehicles
+  "BIKE", "CAR", "TRUCK", "TRAIN", "PLANE",
+  "BOAT", "SHIP", "BUS", "TAXI", "JEEP",
+  
+  // Countries & Places
+  "FRANCE", "CHINA", "JAPAN", "MEXICO", "EGYPT",
+  "BRAZIL", "CANADA", "RUSSIA", "INDIA", "AFRICA",
+  "EUROPE", "AMERICA", "PARIS", "LONDON", "TOKYO"
 ];
 
 const GRID_RADIUS = 4; // Hex grid radius
