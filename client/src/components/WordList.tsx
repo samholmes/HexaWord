@@ -9,11 +9,11 @@ interface WordListProps {
 
 export function WordList({ words, foundWords }: WordListProps) {
   return (
-    <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 border border-white/60 shadow-lg">
-      <h3 className="text-lg font-display font-bold text-foreground/80 mb-4 text-center uppercase tracking-wider">
-        Words to Find
-      </h3>
-      <div className="flex flex-wrap justify-center gap-3">
+    <div className="w-full overflow-x-auto overflow-y-hidden">
+      <div className="px-4 py-3 flex items-center gap-3 min-w-max">
+        <h3 className="text-sm font-display font-bold text-muted-foreground uppercase tracking-wider flex-shrink-0">
+          Words to Find:
+        </h3>
         {words.map((word) => {
           const isFound = foundWords.includes(word);
           return (
@@ -23,10 +23,10 @@ export function WordList({ words, foundWords }: WordListProps) {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               className={cn(
-                "px-4 py-2 rounded-full font-bold text-sm border-2 transition-colors duration-300 flex items-center gap-2",
+                "px-3 py-1.5 rounded-full font-bold text-xs border-2 transition-colors duration-300 flex items-center gap-2 flex-shrink-0 whitespace-nowrap",
                 isFound
-                  ? "bg-green-100 border-green-200 text-green-700 line-through decoration-2 decoration-green-500/50"
-                  : "bg-white border-white text-foreground shadow-sm hover:scale-105"
+                  ? "bg-green-100 border-green-300 text-green-700 line-through decoration-2 decoration-green-500/50"
+                  : "bg-white border-white text-foreground shadow-sm hover-elevate"
               )}
             >
               {word}
@@ -36,7 +36,7 @@ export function WordList({ words, foundWords }: WordListProps) {
                   animate={{ scale: 1 }}
                   transition={{ type: "spring" }}
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-3 h-3" />
                 </motion.span>
               )}
             </motion.div>

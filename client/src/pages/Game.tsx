@@ -135,10 +135,10 @@ export default function Game() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center py-6 px-4 md:px-8 max-w-4xl mx-auto">
+    <div className="h-screen w-screen bg-background flex flex-col overflow-hidden">
       
-      {/* Header Area */}
-      <div className="w-full mb-4">
+      {/* Header Area - Fixed at top */}
+      <div className="flex-shrink-0 px-4 py-3">
         <GameHeader 
           currentWord={currentWord} 
           score={score} 
@@ -148,15 +148,15 @@ export default function Game() {
         />
       </div>
 
-      {/* Main Game Area */}
-      <div className="flex-1 w-full flex flex-col md:flex-row gap-8 items-center justify-center">
+      {/* Main Game Area - Takes remaining space */}
+      <div className="flex-1 w-full flex flex-col overflow-hidden relative">
         
-        {/* Hex Grid Container */}
-        <div className="w-full max-w-[500px] flex-shrink-0 relative">
-           {/* Background decorative blob */}
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-primary/10 via-secondary/10 to-accent/10 rounded-full blur-3xl -z-10 animate-pulse-slow"></div>
-           
-           <HexGrid
+        {/* Background decorative blob */}
+        <div className="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-tr from-primary/10 via-secondary/10 to-accent/10 rounded-full blur-3xl -z-10 animate-pulse-slow pointer-events-none"></div>
+        
+        {/* Hex Grid - Centered and responsive */}
+        <div className="flex-1 flex items-center justify-center overflow-hidden p-4">
+          <HexGrid
             grid={level.grid}
             selectedCells={selectedCells}
             foundWordsCells={foundWordsCells}
@@ -166,14 +166,14 @@ export default function Game() {
             isProcessing={false}
           />
         </div>
+      </div>
 
-        {/* Word List Sidebar/Bottom */}
-        <div className="w-full md:w-64 flex-shrink-0">
-          <WordList 
-            words={level.words} 
-            foundWords={foundWords} 
-          />
-        </div>
+      {/* Word List - Fixed at bottom, horizontally scrollable */}
+      <div className="flex-shrink-0 border-t border-border/30 bg-background/80 backdrop-blur-sm">
+        <WordList 
+          words={level.words} 
+          foundWords={foundWords} 
+        />
       </div>
 
       {/* Win Modal */}
