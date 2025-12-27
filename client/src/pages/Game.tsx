@@ -238,9 +238,6 @@ export default function Game() {
         score={elapsedSeconds}
         playerName={playerName}
         onPlayAgain={() => {
-          setPlayerName("");
-          localStorage.removeItem("hexaword_player_name");
-          setShowNameInput(true);
           refetch();
         }}
       />
