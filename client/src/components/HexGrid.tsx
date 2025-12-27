@@ -54,6 +54,7 @@ export function HexGrid({
   // Zoom and pan state
   const [isZoomed, setIsZoomed] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isActivelyPanning, setIsActivelyPanning] = useState(false);
 
   const hexToPixel = useCallback((q: number, r: number): Point => {
     const x = HEX_SIZE * (3 / 2 * q) * SPACING;
@@ -177,6 +178,7 @@ export function HexGrid({
     isPointerDownRef.current = true;
     const cell = findCellAtPoint(e.clientX, e.clientY);
     if (cell) {
+      setIsActivelyPanning(false); // Allow transition for initial zoom
       setIsZoomed(true);
       setPanOffset(calculatePanOffset(e.clientX, e.clientY));
       onSelectionStart(cell);
@@ -186,6 +188,7 @@ export function HexGrid({
   const handlePointerMove = (e: React.PointerEvent) => {
     e.preventDefault();
     if (!isPointerDownRef.current) return;
+    setIsActivelyPanning(true); // Disable transition during panning
     const cell = findCellAtPoint(e.clientX, e.clientY);
     if (cell) {
       setPanOffset(calculatePanOffset(e.clientX, e.clientY));
@@ -197,6 +200,7 @@ export function HexGrid({
     e.preventDefault();
     if (isPointerDownRef.current) {
       isPointerDownRef.current = false;
+      setIsActivelyPanning(false); // Re-enable transition for zoom out
       setIsZoomed(false);
       setPanOffset({ x: 0, y: 0 });
       onSelectionEnd();
@@ -206,6 +210,7 @@ export function HexGrid({
   const handlePointerCancel = (e: React.PointerEvent) => {
     e.preventDefault();
     isPointerDownRef.current = false;
+    setIsActivelyPanning(false);
     setIsZoomed(false);
     setPanOffset({ x: 0, y: 0 });
     onSelectionEnd();
@@ -245,7 +250,7 @@ export function HexGrid({
           transform: isZoomed 
             ? `scale(${ZOOM_SCALE}) translate(${panOffset.x / ZOOM_SCALE}px, ${panOffset.y / ZOOM_SCALE}px)`
             : "scale(1) translate(0, 0)",
-          transition: "transform 0.15s ease-out",
+          transition: isActivelyPanning ? "none" : "transform 0.15s ease-out",
           transformOrigin: "center center",
         }}
         preserveAspectRatio="xMidYMid meet"
