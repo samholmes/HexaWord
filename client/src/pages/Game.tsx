@@ -239,7 +239,7 @@ export default function Game() {
 
       {/* Header Area - Absolute overlay at top with safe-area padding */}
       <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none p-2 pt-safe">
-        <div className="flex items-center justify-between px-4 py-2 bg-white/80 dark:bg-background/80 backdrop-blur rounded-2xl" style={{ pointerEvents: "auto" }}>
+        <div className="flex items-center justify-between px-4 py-2 bg-white/50 dark:bg-background/50 backdrop-blur-sm rounded-2xl" style={{ pointerEvents: "auto" }}>
           <Button
             variant="ghost"
             size="icon"
@@ -260,7 +260,7 @@ export default function Game() {
 
       {/* Word List - Absolute overlay at bottom with safe-area padding */}
       <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none pb-safe">
-        <div className="bg-background/80 backdrop-blur-sm border-t border-border/30" style={{ pointerEvents: "auto" }}>
+        <div className="bg-background/50 backdrop-blur-sm border-t border-border/20" style={{ pointerEvents: "auto" }}>
           <WordList 
             words={level.words} 
             foundWords={foundWords} 
