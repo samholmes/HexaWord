@@ -246,19 +246,19 @@ export function HexGrid({
                     x={-HEX_SIZE * 0.5}
                     y={-HEX_SIZE * 2.8}
                     width={HEX_SIZE * 1}
-                    height={HEX_SIZE * 2}
+                    height={HEX_SIZE * 1}
                     fill="hsl(var(--primary))"
                   />
                   <rect
                     x={-HEX_SIZE * 1.1}
-                    y={-HEX_SIZE * 4.2}
+                    y={-HEX_SIZE * 3.2}
                     width={HEX_SIZE * 2.2}
                     height={HEX_SIZE * 2.2}
                     rx={HEX_SIZE * 0.35}
                     fill="hsl(var(--primary))"
                   />
                   <text
-                    y={-HEX_SIZE * 3.1}
+                    y={-HEX_SIZE * 2.1}
                     className="font-display font-black uppercase pointer-events-none"
                     fill="hsl(var(--primary-foreground))"
                     textAnchor="middle"
