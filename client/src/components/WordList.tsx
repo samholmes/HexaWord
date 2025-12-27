@@ -51,7 +51,7 @@ export function WordList({ words, foundWords }: WordListProps) {
         </div>
       </div>
       {/* Label with chevron - below the words */}
-      <div className="flex flex-col items-center gap-1 pb-8">
+      <div className="flex flex-col items-center gap-1 pb-4">
         <ChevronUp className="w-5 h-5 text-muted-foreground" />
         <h3 className="text-xs font-display font-bold text-muted-foreground uppercase tracking-wider">
           Words to Find
