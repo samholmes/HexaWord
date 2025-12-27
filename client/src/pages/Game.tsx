@@ -149,21 +149,23 @@ export default function Game() {
       </div>
 
       {/* Main Game Area - Takes remaining space, full width */}
-      <div className="flex-1 w-screen overflow-hidden relative">
+      <div className="flex-1 w-full overflow-hidden relative flex flex-col items-center justify-center px-0">
         
         {/* Background decorative blob */}
-        <div className="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-tr from-primary/10 via-secondary/10 to-accent/10 rounded-full blur-3xl -z-10 animate-pulse-slow pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-secondary/5 to-accent/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
         
-        {/* Hex Grid - Fills full width and height */}
-        <HexGrid
-          grid={level.grid}
-          selectedCells={selectedCells}
-          foundWordsCells={foundWordsCells}
-          onSelectionStart={handleSelectionStart}
-          onSelectionMove={handleSelectionMove}
-          onSelectionEnd={handleSelectionEnd}
-          isProcessing={false}
-        />
+        {/* Hex Grid - Fills full width */}
+        <div className="w-full h-full flex items-center justify-center">
+          <HexGrid
+            grid={level.grid}
+            selectedCells={selectedCells}
+            foundWordsCells={foundWordsCells}
+            onSelectionStart={handleSelectionStart}
+            onSelectionMove={handleSelectionMove}
+            onSelectionEnd={handleSelectionEnd}
+            isProcessing={false}
+          />
+        </div>
       </div>
 
       {/* Word List - Fixed at bottom, horizontally scrollable */}

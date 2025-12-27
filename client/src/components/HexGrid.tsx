@@ -1,13 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRef, useCallback, useMemo } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { HexCell } from "@shared/schema";
 
-// Geometric constants for flat-topped hexagons
-const HEX_SIZE = 45; // Radius
+const HEX_SIZE = 40;
 const HEX_WIDTH = HEX_SIZE * 2;
 const HEX_HEIGHT = Math.sqrt(3) * HEX_SIZE;
-const SPACING = 1.05; // Gap between hexes
+const SPACING = 1.08;
 
 interface Point {
   x: number;
@@ -17,11 +16,11 @@ interface Point {
 interface HexGridProps {
   grid: HexCell[];
   selectedCells: HexCell[];
-  foundWordsCells: HexCell[][]; // Array of arrays of cells that make up found words
+  foundWordsCells: HexCell[][];
   onSelectionStart: (cell: HexCell) => void;
   onSelectionMove: (cell: HexCell) => void;
   onSelectionEnd: () => void;
-  isProcessing: boolean; // Visual feedback while validating
+  isProcessing: boolean;
 }
 
 export function HexGrid({
@@ -31,40 +30,48 @@ export function HexGrid({
   onSelectionStart,
   onSelectionMove,
   onSelectionEnd,
-  isProcessing
 }: HexGridProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  
-  // Convert axial (q,r) to pixel (x,y)
+  const isPointerDownRef = useRef(false);
+  const cellPositionsRef = useRef<Map<string, { cell: HexCell; x: number; y: number }>>(new Map());
+
   const hexToPixel = useCallback((q: number, r: number): Point => {
-    const x = HEX_SIZE * (3/2 * q) * SPACING;
-    const y = HEX_SIZE * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r) * SPACING;
+    const x = HEX_SIZE * (3 / 2 * q) * SPACING;
+    const y = HEX_SIZE * (Math.sqrt(3) / 2 * q + Math.sqrt(3) * r) * SPACING;
     return { x, y };
   }, []);
 
-  // Calculate center offset to center the grid in SVG
-  const calculateViewBox = () => {
-    if (grid.length === 0) return "0 0 100 100";
-    
+  const viewBoxData = useMemo(() => {
+    if (grid.length === 0) return { viewBox: "0 0 100 100", width: 100, height: 100 };
+
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    
+    const positions = new Map<string, { cell: HexCell; x: number; y: number }>();
+
     grid.forEach(cell => {
       const { x, y } = hexToPixel(cell.q, cell.r);
-      minX = Math.min(minX, x - HEX_WIDTH/2);
-      maxX = Math.max(maxX, x + HEX_WIDTH/2);
-      minY = Math.min(minY, y - HEX_HEIGHT/2);
-      maxY = Math.max(maxY, y + HEX_HEIGHT/2);
+      positions.set(`${cell.q}-${cell.r}`, { cell, x, y });
+      minX = Math.min(minX, x - HEX_WIDTH / 2);
+      maxX = Math.max(maxX, x + HEX_WIDTH / 2);
+      minY = Math.min(minY, y - HEX_HEIGHT / 2);
+      maxY = Math.max(maxY, y + HEX_HEIGHT / 2);
     });
 
-    const padding = HEX_SIZE * 2;
+    cellPositionsRef.current = positions;
+
+    const padding = HEX_SIZE * 0.5;
     const width = maxX - minX + padding * 2;
     const height = maxY - minY + padding * 2;
-    
-    return `${minX - padding} ${minY - padding} ${width} ${height}`;
-  };
 
-  // Generate hexagon path points
-  const hexPoints = (() => {
+    return {
+      viewBox: `${minX - padding} ${minY - padding} ${width} ${height}`,
+      width,
+      height,
+      minX: minX - padding,
+      minY: minY - padding
+    };
+  }, [grid, hexToPixel]);
+
+  const hexPoints = useMemo(() => {
     const points = [];
     for (let i = 0; i < 6; i++) {
       const angle_deg = 60 * i;
@@ -72,32 +79,14 @@ export function HexGrid({
       points.push(`${HEX_SIZE * Math.cos(angle_rad)},${HEX_SIZE * Math.sin(angle_rad)}`);
     }
     return points.join(" ");
-  })();
+  }, []);
 
-  // Interaction handlers
-  const getCellFromEvent = (e: React.PointerEvent) => {
-    const svg = svgRef.current;
-    if (!svg) return null;
-
-    // This is a naive hit test, but for hexagons, usually easier to trust the event target
-    // if we put the handler on the polygon itself.
-    // However, for drag fluidity, we might need coordinates.
-    // Let's rely on onPointerEnter on the individual cells for simplicity.
-    return null; 
-  };
-
-  // Visual state helpers
   const isSelected = (cell: HexCell) => selectedCells.some(c => c.q === cell.q && c.r === cell.r);
-  
-  // Check if a cell is part of a found word - complicated because one cell can be in multiple words?
-  // Game logic says "reuse letters". 
-  // We want to highlight PERMANENTLY if it's been used? Or just fade it? 
-  // Let's highlight if it's been found at least once.
-  const isFound = (cell: HexCell) => foundWordsCells.some(word => 
+
+  const isFound = (cell: HexCell) => foundWordsCells.some(word =>
     word.some(c => c.q === cell.q && c.r === cell.r)
   );
 
-  // Calculate connection line path
   const getLinePath = () => {
     if (selectedCells.length < 2) return "";
     return selectedCells.map((cell, i) => {
@@ -106,17 +95,86 @@ export function HexGrid({
     }).join(" ");
   };
 
+  const findCellAtPoint = (clientX: number, clientY: number): HexCell | null => {
+    const svg = svgRef.current;
+    if (!svg) return null;
+
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewBoxData.width / rect.width;
+    const scaleY = viewBoxData.height / rect.height;
+    
+    const svgX = (clientX - rect.left) * scaleX + (viewBoxData.minX || 0);
+    const svgY = (clientY - rect.top) * scaleY + (viewBoxData.minY || 0);
+
+    let closestCell: HexCell | null = null;
+    let closestDist = HEX_SIZE * 1.1;
+
+    cellPositionsRef.current.forEach(({ cell, x, y }) => {
+      const dist = Math.sqrt((svgX - x) ** 2 + (svgY - y) ** 2);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestCell = cell;
+      }
+    });
+
+    return closestCell;
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    isPointerDownRef.current = true;
+    const cell = findCellAtPoint(e.clientX, e.clientY);
+    if (cell) {
+      onSelectionStart(cell);
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isPointerDownRef.current) return;
+    const cell = findCellAtPoint(e.clientX, e.clientY);
+    if (cell) {
+      onSelectionMove(cell);
+    }
+  };
+
+  const handlePointerUp = () => {
+    if (isPointerDownRef.current) {
+      isPointerDownRef.current = false;
+      onSelectionEnd();
+    }
+  };
+
+  const handlePointerCancel = () => {
+    isPointerDownRef.current = false;
+    onSelectionEnd();
+  };
+
+  const aspectRatio = viewBoxData.width / viewBoxData.height;
+
   return (
-    <div className="w-full h-full select-none" style={{ touchAction: "none" }}>
+    <div
+      className="w-full select-none flex items-center justify-center"
+      style={{
+        touchAction: "none",
+        maxHeight: "100%",
+      }}
+    >
       <svg
         ref={svgRef}
-        viewBox={calculateViewBox()}
-        className="w-full h-full drop-shadow-xl"
+        viewBox={viewBoxData.viewBox}
+        className="drop-shadow-xl"
+        style={{
+          width: "100%",
+          height: "auto",
+          maxHeight: "100%",
+          aspectRatio: `${aspectRatio}`,
+        }}
         preserveAspectRatio="xMidYMid meet"
-        onPointerUp={onSelectionEnd}
-        onPointerLeave={onSelectionEnd}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
       >
-        {/* Connection Line Layer - Behind cells */}
         <motion.path
           d={getLinePath()}
           fill="none"
@@ -129,69 +187,59 @@ export function HexGrid({
           transition={{ duration: 0.1 }}
         />
 
-        {/* Cells Layer */}
         {grid.map((cell, idx) => {
           const { x, y } = hexToPixel(cell.q, cell.r);
           const active = isSelected(cell);
           const found = isFound(cell);
-          const lastSelected = selectedCells.length > 0 && 
+          const lastSelected = selectedCells.length > 0 &&
             selectedCells[selectedCells.length - 1].q === cell.q &&
             selectedCells[selectedCells.length - 1].r === cell.r;
 
           return (
-            <g 
-              key={`${cell.q}-${cell.r}`} 
+            <g
+              key={`${cell.q}-${cell.r}`}
               transform={`translate(${x}, ${y})`}
               className="cursor-pointer"
-              onPointerDown={(e) => {
-                e.currentTarget.releasePointerCapture(e.pointerId); // Allow smooth drag over other elements
-                onSelectionStart(cell);
-              }}
-              onPointerEnter={(e) => {
-                if (e.buttons > 0) {
-                  onSelectionMove(cell);
-                }
-              }}
+              data-testid={`hex-cell-${cell.q}-${cell.r}`}
             >
-              {/* Hexagon Shape */}
               <motion.polygon
                 points={hexPoints}
                 fill="currentColor"
                 initial={{ scale: 0, rotate: -30 }}
-                animate={{ 
+                animate={{
                   scale: active ? 1.1 : 1,
                   rotate: active ? 5 : 0,
-                  fill: active 
-                    ? "hsl(var(--primary))" 
-                    : found 
-                      ? "hsl(var(--secondary))" 
+                  fill: active
+                    ? "hsl(var(--primary))"
+                    : found
+                      ? "hsl(var(--secondary))"
                       : "white"
                 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 300, 
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
                   damping: 20,
-                  delay: idx * 0.02 // Staggered entry
+                  delay: idx * 0.02
                 }}
                 className={cn(
                   "stroke-border stroke-2 transition-colors duration-200",
-                  active ? "text-primary stroke-primary-foreground/20" : 
-                  found ? "text-secondary stroke-white" : "text-card"
+                  active ? "text-primary stroke-primary-foreground/20" :
+                    found ? "text-secondary stroke-white" : "text-card"
                 )}
               />
-              
-              {/* Text Label */}
+
               <text
                 className={cn(
                   "hex-text font-display text-2xl font-bold uppercase pointer-events-none transition-colors duration-200",
                   active ? "fill-primary-foreground" : "fill-foreground"
                 )}
-                dy="2" // Small optical adjustment
+                textAnchor="middle"
+                dominantBaseline="central"
+                dy="2"
               >
                 {cell.letter}
               </text>
 
-              {/* Selection Ring (Last selected only) */}
               {lastSelected && (
                 <motion.circle
                   r={HEX_SIZE * 0.8}
