@@ -322,47 +322,111 @@ function generateLevel() {
     }
   }
 
-  // 2. Place Words
+  // 2. Place Words with overlap-aware algorithm
   const selectedWords: string[] = [];
-  const wordsToPlace = [...WORDS_POOL].sort(() => 0.5 - Math.random()).slice(0, 10); // Pick 10 random words
+  
+  // Sort by length (longer first) and pick 10 random words
+  const wordsToPlace = [...WORDS_POOL]
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 15) // Pick more candidates
+    .sort((a, b) => b.length - a.length); // Place longer words first
+
+  // Helper to find cells with a specific letter already placed
+  function findCellsWithLetter(letter: string): HexCell[] {
+    return Array.from(grid.values()).filter(cell => cell.letter === letter);
+  }
+
+  // Helper to try placing a word starting from a specific position in the word
+  function tryPlaceWord(word: string, startIdx: number, startCell: HexCell): HexCell[] | null {
+    const path: HexCell[] = [];
+    
+    // Build path backwards from startIdx to 0
+    let current = startCell;
+    const backPath: HexCell[] = [current];
+    
+    for (let i = startIdx - 1; i >= 0; i--) {
+      const neighbors = getHexNeighbors(current.q, current.r)
+        .map(n => grid.get(`${n.q},${n.r}`))
+        .filter(n => n !== undefined && !backPath.includes(n!))
+        .filter(n => !n!.letter || n!.letter === word[i]) as HexCell[];
+      
+      // Prefer cells that already have the matching letter (overlap)
+      const overlapping = neighbors.filter(n => n.letter === word[i]);
+      const empty = neighbors.filter(n => !n.letter);
+      const sorted = [...overlapping, ...empty];
+      
+      if (sorted.length === 0) return null;
+      
+      // Try a random valid neighbor
+      current = sorted[Math.floor(Math.random() * sorted.length)];
+      backPath.unshift(current);
+    }
+    
+    // Build path forwards from startIdx to end
+    current = startCell;
+    const forwardPath: HexCell[] = [];
+    
+    for (let i = startIdx + 1; i < word.length; i++) {
+      const neighbors = getHexNeighbors(current.q, current.r)
+        .map(n => grid.get(`${n.q},${n.r}`))
+        .filter(n => n !== undefined && !backPath.includes(n!) && !forwardPath.includes(n!))
+        .filter(n => !n!.letter || n!.letter === word[i]) as HexCell[];
+      
+      // Prefer cells that already have the matching letter (overlap)
+      const overlapping = neighbors.filter(n => n.letter === word[i]);
+      const empty = neighbors.filter(n => !n.letter);
+      const sorted = [...overlapping, ...empty];
+      
+      if (sorted.length === 0) return null;
+      
+      current = sorted[Math.floor(Math.random() * sorted.length)];
+      forwardPath.push(current);
+    }
+    
+    return [...backPath, ...forwardPath];
+  }
 
   for (const word of wordsToPlace) {
+    if (selectedWords.length >= 10) break; // Stop at 10 words
+    
     let placed = false;
     let attempts = 0;
-    while (!placed && attempts < 50) {
-      attempts++;
-      // Pick random start cell
-      const cells = Array.from(grid.values());
-      let current = cells[Math.floor(Math.random() * cells.length)];
-      const path: HexCell[] = [];
-      let valid = true;
+    
+    // First, try to find overlap opportunities with existing letters
+    for (let charIdx = 0; charIdx < word.length && !placed && attempts < 100; charIdx++) {
+      const matchingCells = findCellsWithLetter(word[charIdx]);
       
-      // Try to walk for the word
-      for (let i = 0; i < word.length; i++) {
-        // Check if current cell is compatible
-        if (current.letter && current.letter !== word[i]) {
-          valid = false;
+      // Shuffle matching cells for randomness
+      matchingCells.sort(() => 0.5 - Math.random());
+      
+      for (const startCell of matchingCells) {
+        attempts++;
+        if (attempts > 100) break;
+        
+        const path = tryPlaceWord(word, charIdx, startCell);
+        if (path) {
+          // Commit path
+          path.forEach((cell, i) => {
+            cell.letter = word[i];
+            grid.set(`${cell.q},${cell.r}`, cell);
+          });
+          selectedWords.push(word);
+          placed = true;
           break;
         }
-        
-        path.push(current);
-        
-        if (i < word.length - 1) {
-          // Find valid neighbors for next letter
-          const neighbors = getHexNeighbors(current.q, current.r)
-            .map(n => grid.get(`${n.q},${n.r}`))
-            .filter(n => n !== undefined && !path.includes(n!)); // Don't loop back immediately in same word placement (optional)
-            
-          if (neighbors.length === 0) {
-            valid = false;
-            break;
-          }
-          current = neighbors[Math.floor(Math.random() * neighbors.length)]!;
-        }
       }
-
-      if (valid) {
-        // Commit path
+    }
+    
+    // If no overlap found, try random placement
+    while (!placed && attempts < 150) {
+      attempts++;
+      const cells = Array.from(grid.values()).filter(c => !c.letter || c.letter === word[0]);
+      if (cells.length === 0) break;
+      
+      const startCell = cells[Math.floor(Math.random() * cells.length)];
+      const path = tryPlaceWord(word, 0, startCell);
+      
+      if (path) {
         path.forEach((cell, i) => {
           cell.letter = word[i];
           grid.set(`${cell.q},${cell.r}`, cell);
@@ -373,7 +437,7 @@ function generateLevel() {
     }
   }
 
-  // 3. Fill remaining
+  // 3. Fill remaining cells with random letters
   const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   for (const cell of grid.values()) {
     if (!cell.letter) {
