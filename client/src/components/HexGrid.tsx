@@ -128,22 +128,45 @@ export function HexGrid({
   };
 
   const findCellAtPoint = (clientX: number, clientY: number): HexCell | null => {
-    const svg = svgRef.current;
-    if (!svg) return null;
+    const container = containerRef.current;
+    if (!container) return null;
 
-    // Use SVG's CTM to properly convert screen coordinates to viewBox coordinates
-    // This accounts for the SVG being centered and letterboxed within the container
-    const point = svg.createSVGPoint();
-    point.x = clientX;
-    point.y = clientY;
+    // Get container bounds (stable, not affected by CSS transforms)
+    const containerRect = container.getBoundingClientRect();
     
-    const ctm = svg.getScreenCTM();
-    if (!ctm) return null;
+    // Calculate where the SVG is actually rendered within the container
+    // accounting for letterboxing due to aspect ratio preservation
+    const containerAspect = containerRect.width / containerRect.height;
+    const svgAspect = viewBoxData.width / viewBoxData.height;
     
-    // Transform screen point to SVG viewBox coordinates
-    const svgPoint = point.matrixTransform(ctm.inverse());
-    const svgX = svgPoint.x;
-    const svgY = svgPoint.y;
+    let renderedWidth: number;
+    let renderedHeight: number;
+    let offsetX: number;
+    let offsetY: number;
+    
+    if (containerAspect > svgAspect) {
+      // Container is wider - SVG is height-constrained, centered horizontally
+      renderedHeight = containerRect.height;
+      renderedWidth = renderedHeight * svgAspect;
+      offsetX = (containerRect.width - renderedWidth) / 2;
+      offsetY = 0;
+    } else {
+      // Container is taller - SVG is width-constrained, centered vertically
+      renderedWidth = containerRect.width;
+      renderedHeight = renderedWidth / svgAspect;
+      offsetX = 0;
+      offsetY = (containerRect.height - renderedHeight) / 2;
+    }
+    
+    // Map touch point to viewBox coordinates
+    const touchX = clientX - containerRect.left - offsetX;
+    const touchY = clientY - containerRect.top - offsetY;
+    
+    const scaleX = viewBoxData.width / renderedWidth;
+    const scaleY = viewBoxData.height / renderedHeight;
+    
+    const svgX = touchX * scaleX + (viewBoxData.minX || 0);
+    const svgY = touchY * scaleY + (viewBoxData.minY || 0);
 
     let closestCell: HexCell | null = null;
     let closestDist = HEX_SIZE * 1.1;
