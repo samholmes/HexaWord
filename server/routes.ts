@@ -324,7 +324,7 @@ function generateLevel() {
 
   // 2. Place Words
   const selectedWords: string[] = [];
-  const wordsToPlace = [...WORDS_POOL].sort(() => 0.5 - Math.random()).slice(0, 6); // Pick 6 random words
+  const wordsToPlace = [...WORDS_POOL].sort(() => 0.5 - Math.random()).slice(0, 10); // Pick 10 random words
 
   for (const word of wordsToPlace) {
     let placed = false;
