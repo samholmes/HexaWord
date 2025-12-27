@@ -17,7 +17,7 @@ export function WordList({ words, foundWords }: WordListProps) {
 
   return (
     <div className="w-full overflow-x-auto overflow-y-hidden">
-      <div className="px-4 py-3 flex items-center gap-3 min-w-max">
+      <div className="px-4 py-3 pb-8 flex items-center gap-3 min-w-max">
         <h3 className="text-sm font-display font-bold text-muted-foreground uppercase tracking-wider flex-shrink-0">
           Words to Find:
         </h3>
