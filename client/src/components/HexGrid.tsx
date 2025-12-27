@@ -221,12 +221,12 @@ export function HexGrid({
                 }}
                 transition={{
                   type: "spring",
-                  stiffness: 600,
-                  damping: 12,
+                  stiffness: 800,
+                  damping: 20,
                   delay: idx * 0.005
                 }}
                 className={cn(
-                  "stroke-border stroke-2 transition-colors duration-200",
+                  "stroke-border stroke-2 transition-colors duration-75",
                   active ? "text-primary stroke-primary-foreground/20" :
                     found ? "text-secondary stroke-white" : "text-card"
                 )}
@@ -234,7 +234,7 @@ export function HexGrid({
 
               <text
                 className={cn(
-                  "hex-text font-display text-2xl font-bold uppercase pointer-events-none transition-colors duration-200",
+                  "hex-text font-display text-2xl font-bold uppercase pointer-events-none transition-colors duration-75",
                   active ? "fill-primary-foreground" : "fill-foreground"
                 )}
                 textAnchor="middle"
