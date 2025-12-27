@@ -5,7 +5,7 @@ import type { HexCell } from "@shared/schema";
 
 const HEX_SIZE = 40;
 const ZOOM_SCALE = 1.6;
-const ZOOM_OFFSET_Y = -80; // Pan up so finger doesn't cover selection
+const TOUCH_OFFSET_Y = 60; // Detect cells above finger touch point (in screen pixels)
 const HEX_WIDTH = HEX_SIZE * 2;
 const HEX_HEIGHT = Math.sqrt(3) * HEX_SIZE;
 const SPACING = 1.08;
@@ -135,8 +135,11 @@ export function HexGrid({
     const scaleX = viewBoxData.width / rect.width;
     const scaleY = viewBoxData.height / rect.height;
     
+    // Apply touch offset - detect cells ABOVE where user is touching
+    const offsetClientY = clientY - TOUCH_OFFSET_Y;
+    
     const svgX = (clientX - rect.left) * scaleX + (viewBoxData.minX || 0);
-    const svgY = (clientY - rect.top) * scaleY + (viewBoxData.minY || 0);
+    const svgY = (offsetClientY - rect.top) * scaleY + (viewBoxData.minY || 0);
 
     let closestCell: HexCell | null = null;
     let closestDist = HEX_SIZE * 1.1;
@@ -160,13 +163,13 @@ export function HexGrid({
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     
-    // Calculate how far the touch point is from center
+    // Calculate how far the touch point is from center (use offset touch point)
     const touchX = clientX - rect.left;
-    const touchY = clientY - rect.top;
+    const touchY = (clientY - TOUCH_OFFSET_Y) - rect.top;
     
-    // Pan to move the touch point toward the center, offset up from finger
+    // Pan to move the touch point toward the center
     const offsetX = (centerX - touchX) * (ZOOM_SCALE - 1);
-    const offsetY = (centerY - touchY) * (ZOOM_SCALE - 1) + ZOOM_OFFSET_Y;
+    const offsetY = (centerY - touchY) * (ZOOM_SCALE - 1);
     
     return { x: offsetX, y: offsetY };
   };
@@ -327,39 +330,6 @@ export function HexGrid({
           );
         })}
 
-        {selectedCells.length > 0 && (() => {
-          const lastSelectedCell = selectedCells[selectedCells.length - 1];
-          const { x, y } = hexToPixel(lastSelectedCell.q, lastSelectedCell.r);
-          return (
-            <g key="tooltip" transform={`translate(${x}, ${y})`} style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }}>
-              <rect
-                x={-HEX_SIZE * 0.5}
-                y={-HEX_SIZE * 2.8}
-                width={HEX_SIZE * 1}
-                height={HEX_SIZE * 1}
-                fill="hsl(var(--primary))"
-              />
-              <rect
-                x={-HEX_SIZE * 1.1}
-                y={-HEX_SIZE * 3.2}
-                width={HEX_SIZE * 2.2}
-                height={HEX_SIZE * 2.2}
-                rx={HEX_SIZE * 0.35}
-                fill="hsl(var(--primary))"
-              />
-              <text
-                y={-HEX_SIZE * 2.1}
-                className="font-display font-black uppercase pointer-events-none"
-                fill="hsl(var(--primary-foreground))"
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={HEX_SIZE * 1.4}
-              >
-                {lastSelectedCell.letter}
-              </text>
-            </g>
-          );
-        })()}
       </svg>
     </div>
   );
