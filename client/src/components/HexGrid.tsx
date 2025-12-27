@@ -253,7 +253,7 @@ export function HexGrid({
                   key={`overlay-${fw.word}-${wordIdx}`}
                   points={hexPoints}
                   fill={wordToColor(fw.word)}
-                  style={{ mixBlendMode: "multiply" }}
+                  style={{ mixBlendMode: "multiply", pointerEvents: "none" }}
                 />
               ))}
 
