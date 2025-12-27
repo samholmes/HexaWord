@@ -241,7 +241,7 @@ export function HexGrid({
               </text>
 
               {lastSelected && (
-                <g style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }}>
+                <g style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))", zIndex: 1000 }}>
                   <rect
                     x={-HEX_SIZE * 0.5}
                     y={-HEX_SIZE * 2.8}
