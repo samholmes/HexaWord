@@ -256,6 +256,45 @@ export function HexGrid({
                   transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
                 />
               )}
+
+              {lastSelected && (
+                <g transform={`translate(0, ${-HEX_SIZE * 2.2})`}>
+                  <motion.rect
+                    x={-HEX_SIZE * 0.9}
+                    y={-HEX_SIZE * 0.9}
+                    width={HEX_SIZE * 1.8}
+                    height={HEX_SIZE * 1.8}
+                    rx={HEX_SIZE * 0.3}
+                    fill="hsl(var(--primary))"
+                    stroke="hsl(var(--primary-foreground))"
+                    strokeWidth={2}
+                    initial={{ scale: 0, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0, y: 20 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))" }}
+                  />
+                  <motion.polygon
+                    points={`0,${HEX_SIZE * 0.9} ${-HEX_SIZE * 0.25},${HEX_SIZE * 0.55} ${HEX_SIZE * 0.25},${HEX_SIZE * 0.55}`}
+                    fill="hsl(var(--primary))"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                  />
+                  <motion.text
+                    className="font-display font-black uppercase pointer-events-none"
+                    fill="hsl(var(--primary-foreground))"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fontSize={HEX_SIZE * 1.2}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                  >
+                    {cell.letter}
+                  </motion.text>
+                </g>
+              )}
             </g>
           );
         })}
