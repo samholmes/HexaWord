@@ -208,17 +208,13 @@ export function HexGrid({
             >
               <motion.polygon
                 points={hexPoints}
-                fill="currentColor"
+                fill={active
+                  ? "hsl(var(--primary))"
+                  : found
+                    ? "hsl(var(--secondary))"
+                    : "white"}
                 initial={{ scale: 0, rotate: -30 }}
-                animate={{
-                  scale: active ? 1.1 : 1,
-                  rotate: active ? 5 : 0,
-                  fill: active
-                    ? "hsl(var(--primary))"
-                    : found
-                      ? "hsl(var(--secondary))"
-                      : "white"
-                }}
+                animate={{ scale: 1, rotate: 0 }}
                 transition={{
                   type: "spring",
                   stiffness: 800,
@@ -226,7 +222,7 @@ export function HexGrid({
                   delay: idx * 0.005
                 }}
                 className={cn(
-                  "stroke-border stroke-2 transition-colors duration-75",
+                  "stroke-border stroke-2",
                   active ? "text-primary stroke-primary-foreground/20" :
                     found ? "text-secondary stroke-white" : "text-card"
                 )}
@@ -245,54 +241,32 @@ export function HexGrid({
               </text>
 
               {lastSelected && (
-                <motion.circle
-                  r={HEX_SIZE * 0.8}
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="3"
-                  strokeDasharray="4 4"
-                  initial={{ rotate: 0 }}
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-                />
-              )}
-
-              {lastSelected && (
-                <g transform={`translate(0, ${-HEX_SIZE * 2.2})`}>
-                  <motion.rect
-                    x={-HEX_SIZE * 0.9}
-                    y={-HEX_SIZE * 0.9}
-                    width={HEX_SIZE * 1.8}
-                    height={HEX_SIZE * 1.8}
-                    rx={HEX_SIZE * 0.3}
+                <g style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }}>
+                  <rect
+                    x={-HEX_SIZE * 0.5}
+                    y={-HEX_SIZE * 2.8}
+                    width={HEX_SIZE * 1}
+                    height={HEX_SIZE * 2}
                     fill="hsl(var(--primary))"
-                    stroke="hsl(var(--primary-foreground))"
-                    strokeWidth={2}
-                    initial={{ scale: 0, y: 20 }}
-                    animate={{ scale: 1, y: 0 }}
-                    exit={{ scale: 0, y: 20 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                    style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))" }}
                   />
-                  <motion.polygon
-                    points={`0,${HEX_SIZE * 0.9} ${-HEX_SIZE * 0.25},${HEX_SIZE * 0.55} ${HEX_SIZE * 0.25},${HEX_SIZE * 0.55}`}
+                  <rect
+                    x={-HEX_SIZE * 1.1}
+                    y={-HEX_SIZE * 4.2}
+                    width={HEX_SIZE * 2.2}
+                    height={HEX_SIZE * 2.2}
+                    rx={HEX_SIZE * 0.35}
                     fill="hsl(var(--primary))"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
                   />
-                  <motion.text
+                  <text
+                    y={-HEX_SIZE * 3.1}
                     className="font-display font-black uppercase pointer-events-none"
                     fill="hsl(var(--primary-foreground))"
                     textAnchor="middle"
                     dominantBaseline="central"
-                    fontSize={HEX_SIZE * 1.2}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    fontSize={HEX_SIZE * 1.4}
                   >
                     {cell.letter}
-                  </motion.text>
+                  </text>
                 </g>
               )}
             </g>
