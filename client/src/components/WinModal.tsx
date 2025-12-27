@@ -52,7 +52,7 @@ export function WinModal({ isOpen, score, playerName, onPlayAgain }: WinModalPro
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, y: 20 }}
-            className="bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 border border-primary/20 rounded-3xl p-8 max-w-md w-full shadow-2xl"
+            className="bg-gradient-to-br from-primary/40 via-accent/40 to-secondary/40 border border-primary/40 rounded-3xl p-8 max-w-md w-full shadow-2xl"
           >
             <div className="text-center">
               <div className="flex justify-center mb-4">
