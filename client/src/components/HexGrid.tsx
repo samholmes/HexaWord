@@ -128,14 +128,15 @@ export function HexGrid({
   };
 
   const findCellAtPoint = (clientX: number, clientY: number): HexCell | null => {
-    const svg = svgRef.current;
-    if (!svg) return null;
+    const container = containerRef.current;
+    if (!container) return null;
 
-    const rect = svg.getBoundingClientRect();
+    // Use container bounds (stable, not transformed)
+    const rect = container.getBoundingClientRect();
     const scaleX = viewBoxData.width / rect.width;
     const scaleY = viewBoxData.height / rect.height;
     
-    // Use actual touch point for cell detection
+    // Map touch point to viewBox coordinates
     const svgX = (clientX - rect.left) * scaleX + (viewBoxData.minX || 0);
     const svgY = (clientY - rect.top) * scaleY + (viewBoxData.minY || 0);
 
@@ -216,16 +217,27 @@ export function HexGrid({
   return (
     <div
       ref={containerRef}
-      className="w-full select-none flex items-center justify-center overflow-hidden"
+      className="w-full select-none flex items-center justify-center overflow-hidden relative"
       style={{
         touchAction: "none",
         maxHeight: "100%",
       }}
     >
+      {/* Invisible overlay for stable touch tracking */}
+      <div
+        className="absolute inset-0 z-10"
+        style={{ touchAction: "none" }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={(e) => handlePointerUp(e as React.PointerEvent)}
+        onPointerCancel={handlePointerCancel}
+      />
+      
       <svg
         ref={svgRef}
         viewBox={viewBoxData.viewBox}
-        className="drop-shadow-xl"
+        className="drop-shadow-xl pointer-events-none"
         style={{
           width: "100%",
           height: "auto",
@@ -238,11 +250,6 @@ export function HexGrid({
           transformOrigin: "center center",
         }}
         preserveAspectRatio="xMidYMid meet"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={(e) => handlePointerUp(e as React.PointerEvent)}
-        onPointerCancel={handlePointerCancel}
       >
         <motion.path
           d={getLinePath()}
