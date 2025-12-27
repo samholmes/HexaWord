@@ -13,10 +13,28 @@ interface Point {
   y: number;
 }
 
+// Generate a consistent color from a word string using a hash
+function wordToColor(word: string): string {
+  let hash = 0;
+  for (let i = 0; i < word.length; i++) {
+    hash = word.charCodeAt(i) + ((hash << 5) - hash);
+    hash = hash & hash;
+  }
+  // Use the hash to generate a hue (0-360)
+  const hue = Math.abs(hash) % 360;
+  // Fixed saturation and lightness for vibrant but consistent colors
+  return `hsla(${hue}, 70%, 55%, 0.45)`;
+}
+
+interface FoundWord {
+  word: string;
+  cells: HexCell[];
+}
+
 interface HexGridProps {
   grid: HexCell[];
   selectedCells: HexCell[];
-  foundWordsCells: HexCell[][];
+  foundWords: FoundWord[];
   onSelectionStart: (cell: HexCell) => void;
   onSelectionMove: (cell: HexCell) => void;
   onSelectionEnd: () => void;
@@ -26,7 +44,7 @@ interface HexGridProps {
 export function HexGrid({
   grid,
   selectedCells,
-  foundWordsCells,
+  foundWords,
   onSelectionStart,
   onSelectionMove,
   onSelectionEnd,
@@ -83,8 +101,15 @@ export function HexGrid({
 
   const isSelected = (cell: HexCell) => selectedCells.some(c => c.q === cell.q && c.r === cell.r);
 
-  const isFound = (cell: HexCell) => foundWordsCells.some(word =>
-    word.some(c => c.q === cell.q && c.r === cell.r)
+  // Get all words that contain this cell
+  const getWordsForCell = (cell: HexCell): FoundWord[] => {
+    return foundWords.filter(fw => 
+      fw.cells.some(c => c.q === cell.q && c.r === cell.r)
+    );
+  };
+
+  const isFound = (cell: HexCell) => foundWords.some(fw =>
+    fw.cells.some(c => c.q === cell.q && c.r === cell.r)
   );
 
   const getLinePath = () => {
@@ -194,7 +219,8 @@ export function HexGrid({
         {grid.map((cell, idx) => {
           const { x, y } = hexToPixel(cell.q, cell.r);
           const active = isSelected(cell);
-          const found = isFound(cell);
+          const cellWords = getWordsForCell(cell);
+          const hasFoundWords = cellWords.length > 0;
 
           return (
             <g
@@ -203,13 +229,10 @@ export function HexGrid({
               className="cursor-pointer"
               data-testid={`hex-cell-${cell.q}-${cell.r}`}
             >
+              {/* Base hexagon - white background */}
               <motion.polygon
                 points={hexPoints}
-                fill={active
-                  ? "hsl(var(--primary))"
-                  : found
-                    ? "hsl(var(--secondary))"
-                    : "white"}
+                fill={active ? "hsl(var(--primary))" : "white"}
                 initial={{ scale: 0, rotate: -30 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{
@@ -220,15 +243,25 @@ export function HexGrid({
                 }}
                 className={cn(
                   "stroke-border stroke-2",
-                  active ? "text-primary stroke-primary-foreground/20" :
-                    found ? "text-secondary stroke-white" : "text-card"
+                  active ? "text-primary stroke-primary-foreground/20" : "text-card"
                 )}
               />
+
+              {/* Transparent color overlays for each found word */}
+              {!active && cellWords.map((fw, wordIdx) => (
+                <polygon
+                  key={`overlay-${fw.word}-${wordIdx}`}
+                  points={hexPoints}
+                  fill={wordToColor(fw.word)}
+                  style={{ mixBlendMode: "multiply" }}
+                />
+              ))}
 
               <text
                 className={cn(
                   "hex-text font-display text-2xl font-bold uppercase pointer-events-none transition-colors duration-75",
-                  active ? "fill-primary-foreground" : "fill-foreground"
+                  active ? "fill-primary-foreground" : 
+                    hasFoundWords ? "fill-foreground" : "fill-foreground"
                 )}
                 textAnchor="middle"
                 dominantBaseline="central"

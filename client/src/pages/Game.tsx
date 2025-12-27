@@ -17,7 +17,7 @@ export default function Game() {
   const { data: level, isLoading, error, refetch } = useGameStart();
   const [selectedCells, setSelectedCells] = useState<HexCell[]>([]);
   const [foundWords, setFoundWords] = useState<string[]>([]);
-  const [foundWordsCells, setFoundWordsCells] = useState<HexCell[][]>([]);
+  const [foundWordsData, setFoundWordsData] = useState<{word: string; cells: HexCell[]}[]>([]);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isWon, setIsWon] = useState(false);
   const [playerName, setPlayerName] = useState("");
@@ -38,7 +38,7 @@ export default function Game() {
   useEffect(() => {
     if (level) {
       setFoundWords([]);
-      setFoundWordsCells([]);
+      setFoundWordsData([]);
       setSelectedCells([]);
       setElapsedSeconds(0);
       setIsWon(false);
@@ -103,7 +103,7 @@ export default function Game() {
       
       if (level.words.includes(word) && !foundWords.includes(word)) {
         setFoundWords(prev => [...prev, word]);
-        setFoundWordsCells(prev => [...prev, newSelection]);
+        setFoundWordsData(prev => [...prev, { word, cells: newSelection }]);
         setSelectedCells([]);
 
         toast({
@@ -136,7 +136,7 @@ export default function Game() {
 
     if (level.words.includes(word) && !foundWords.includes(word)) {
       setFoundWords(prev => [...prev, word]);
-      setFoundWordsCells(prev => [...prev, [...selectedCells]]);
+      setFoundWordsData(prev => [...prev, { word, cells: [...selectedCells] }]);
 
       toast({
         title: "Word Found!",
@@ -250,7 +250,7 @@ export default function Game() {
         <HexGrid
           grid={level.grid}
           selectedCells={selectedCells}
-          foundWordsCells={foundWordsCells}
+          foundWords={foundWordsData}
           onSelectionStart={handleSelectionStart}
           onSelectionMove={handleSelectionMove}
           onSelectionEnd={handleSelectionEnd}
