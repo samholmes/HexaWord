@@ -18,7 +18,7 @@ export function WordList({ words, foundWords }: WordListProps) {
   return (
     <div className="w-full flex flex-col">
       {/* Words container - horizontally scrollable */}
-      <div className="overflow-x-auto overflow-y-hidden px-4 py-3">
+      <div className="overflow-x-auto overflow-y-hidden px-4 py-2">
         <div className="flex items-center gap-3 min-w-max">
           {sortedWords.map((word) => {
             const isFound = foundWords.includes(word);
