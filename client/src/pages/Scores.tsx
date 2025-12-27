@@ -6,8 +6,16 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
+const formatTime = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
+
 export default function Scores() {
   const { data: scores, isLoading } = useScores();
+
+  const sortedScores = scores ? [...scores].sort((a, b) => a.score - b.score) : [];
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-12">
@@ -21,16 +29,16 @@ export default function Scores() {
           </Link>
           <div className="flex items-center gap-2 text-primary font-display font-black text-2xl uppercase tracking-wider">
             <Trophy className="w-8 h-8 fill-current" />
-            Leaderboard
+            Fastest Times
           </div>
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl shadow-black/5 border border-border/50 overflow-hidden">
           {isLoading ? (
-            <div className="p-12 text-center text-muted-foreground">Loading scores...</div>
-          ) : scores && scores.length > 0 ? (
+            <div className="p-12 text-center text-muted-foreground">Loading leaderboard...</div>
+          ) : sortedScores && sortedScores.length > 0 ? (
             <div className="divide-y divide-border/50">
-              {scores.map((score, index) => {
+              {sortedScores.map((score, index) => {
                 const isTop3 = index < 3;
                 return (
                   <motion.div
@@ -63,8 +71,8 @@ export default function Scores() {
                         </div>
                       </div>
                     </div>
-                    <div className="font-display font-black text-2xl text-primary">
-                      {score.score}
+                    <div className="font-display font-black text-2xl text-primary font-mono">
+                      {formatTime(score.score)}
                     </div>
                   </motion.div>
                 );
@@ -72,7 +80,7 @@ export default function Scores() {
             </div>
           ) : (
             <div className="p-12 text-center text-muted-foreground">
-              No scores yet. Be the first to play!
+              No times recorded yet. Be the first to play!
             </div>
           )}
         </div>

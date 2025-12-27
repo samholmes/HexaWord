@@ -1,95 +1,105 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { useSubmitScore } from "@/hooks/use-scores";
-import { motion } from "framer-motion";
-import { Trophy, RefreshCw } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { Trophy } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 interface WinModalProps {
   isOpen: boolean;
   score: number;
+  playerName: string;
   onPlayAgain: () => void;
 }
 
-export function WinModal({ isOpen, score, onPlayAgain }: WinModalProps) {
-  const [username, setUsername] = useState("");
-  const { mutate, isPending, isSuccess } = useSubmitScore();
+const formatTime = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
+
+export function WinModal({ isOpen, score, playerName, onPlayAgain }: WinModalProps) {
+  const [submitted, setSubmitted] = useState(false);
+
+  const { mutate: submitScore, isPending } = useMutation({
+    mutationFn: async (data: { username: string; score: number }) => {
+      const res = await fetch("/api/scores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to submit score");
+      return res.json();
+    },
+    onSuccess: () => {
+      setSubmitted(true);
+      queryClient.invalidateQueries({ queryKey: ["/api/scores"] });
+    },
+  });
 
   const handleSubmit = () => {
-    if (!username.trim()) return;
-    mutate({ username, score });
+    if (playerName.trim()) {
+      submitScore({ username: playerName.trim(), score });
+    }
   };
 
   return (
-    <Dialog open={isOpen}>
-      <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-xl border-white/40 shadow-2xl rounded-3xl p-0 overflow-hidden">
-        <div className="bg-gradient-to-br from-primary to-accent p-8 text-center relative overflow-hidden">
-          {/* Confetti-like decorations */}
-          <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
-          
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        >
           <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", duration: 1 }}
-            className="bg-white rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center shadow-lg relative z-10"
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 20 }}
+            className="bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 border border-primary/20 rounded-3xl p-8 max-w-md w-full shadow-2xl"
           >
-            <Trophy className="w-12 h-12 text-accent" />
-          </motion.div>
-          
-          <DialogTitle className="text-3xl font-display font-black text-white mb-2 relative z-10 text-shadow-lg">
-            Level Complete!
-          </DialogTitle>
-          <div className="text-white/90 font-bold relative z-10">
-            Final Score: <span className="text-2xl ml-1">{score}</span>
-          </div>
-        </div>
-
-        <div className="p-8 space-y-6">
-          {!isSuccess ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
-                  Save your high score
-                </label>
-                <div className="flex gap-3">
-                  <Input
-                    placeholder="Enter your name"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="flex-1 rounded-xl border-2 border-muted focus-visible:ring-primary/30 text-lg font-display"
-                    maxLength={10}
-                  />
-                  <Button 
-                    onClick={handleSubmit} 
-                    disabled={isPending || !username}
-                    className="rounded-xl px-6 font-bold shadow-lg shadow-primary/20 hover:translate-y-[-2px] transition-all"
-                  >
-                    {isPending ? "Saving..." : "Save"}
-                  </Button>
-                </div>
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <Trophy className="w-16 h-16 text-yellow-500 fill-yellow-300" />
               </div>
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-green-50 text-green-800 p-4 rounded-xl border border-green-100 text-center font-bold"
-            >
-              Score saved! You're a legend. 🌟
-            </motion.div>
-          )}
 
-          <Button 
-            onClick={onPlayAgain}
-            variant="outline"
-            className="w-full rounded-xl py-6 font-bold text-lg border-2 hover:bg-muted/50 gap-2"
-          >
-            <RefreshCw className="w-5 h-5" />
-            Play Again
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+              <h2 className="text-3xl font-display font-black mb-2">You Won!</h2>
+              <p className="text-muted-foreground mb-6">All words found!</p>
+
+              <div className="bg-white/80 backdrop-blur rounded-2xl p-4 mb-6">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                  Final Time
+                </p>
+                <p className="text-4xl font-display font-black text-primary font-mono">{formatTime(score)}</p>
+              </div>
+
+              {!submitted ? (
+                <Button
+                  onClick={handleSubmit}
+                  className="w-full font-bold mb-4"
+                  disabled={!playerName.trim() || isPending}
+                  data-testid="button-submit-score"
+                >
+                  {isPending ? "Submitting..." : "Save to Leaderboard"}
+                </Button>
+              ) : (
+                <div className="bg-green-100 text-green-700 rounded-2xl p-4 font-bold mb-4">
+                  Time saved to leaderboard!
+                </div>
+              )}
+
+              <Button
+                onClick={onPlayAgain}
+                variant="outline"
+                className="w-full font-bold"
+                data-testid="button-play-again"
+              >
+                Play Again
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
