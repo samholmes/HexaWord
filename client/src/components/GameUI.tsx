@@ -13,16 +13,9 @@ const formatTime = (seconds: number): string => {
 
 export function GameHeader({ elapsedSeconds }: GameHeaderProps) {
   return (
-    <div className="w-full flex justify-between items-center px-4 py-2">
-      <div className="bg-white/80 backdrop-blur rounded-2xl p-3 shadow-sm border border-white/50 flex items-center gap-2">
-        <div className="bg-accent/20 p-2 rounded-xl text-accent-foreground">
-          <Clock className="w-5 h-5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Time</span>
-          <span className="text-xl font-display font-black leading-none font-mono">{formatTime(elapsedSeconds)}</span>
-        </div>
-      </div>
+    <div className="flex items-center gap-2">
+      <Clock className="w-4 h-4 text-muted-foreground" />
+      <span className="text-lg font-display font-bold font-mono">{formatTime(elapsedSeconds)}</span>
     </div>
   );
 }

@@ -239,7 +239,7 @@ export default function Game() {
 
       {/* Header Area - Absolute overlay at top with safe-area padding */}
       <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none p-2 pt-safe">
-        <div className="flex items-center justify-between px-4 py-2 bg-white/50 dark:bg-background/50 backdrop-blur-sm rounded-2xl" style={{ pointerEvents: "auto" }}>
+        <div className="flex items-center justify-between gap-3 px-3 py-1.5 bg-white/50 dark:bg-background/50 backdrop-blur-sm rounded-xl" style={{ pointerEvents: "auto" }}>
           <Button
             variant="ghost"
             size="icon"
@@ -251,7 +251,6 @@ export default function Game() {
           <GameHeader 
             elapsedSeconds={elapsedSeconds}
           />
-          <div className="w-10" />
         </div>
       </div>
 
