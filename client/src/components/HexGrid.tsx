@@ -221,9 +221,9 @@ export function HexGrid({
                 }}
                 transition={{
                   type: "spring",
-                  stiffness: 300,
-                  damping: 20,
-                  delay: idx * 0.02
+                  stiffness: 600,
+                  damping: 12,
+                  delay: idx * 0.005
                 }}
                 className={cn(
                   "stroke-border stroke-2 transition-colors duration-200",
