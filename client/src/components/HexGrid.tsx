@@ -5,7 +5,7 @@ import type { HexCell } from "@shared/schema";
 
 const HEX_SIZE = 40;
 const ZOOM_SCALE = 1.6;
-const TOUCH_OFFSET_Y = 60; // Detect cells above finger touch point (in screen pixels)
+const PAN_OFFSET_Y = -100; // Pan the board up so selected cell appears above finger
 const HEX_WIDTH = HEX_SIZE * 2;
 const HEX_HEIGHT = Math.sqrt(3) * HEX_SIZE;
 const SPACING = 1.08;
@@ -135,11 +135,9 @@ export function HexGrid({
     const scaleX = viewBoxData.width / rect.width;
     const scaleY = viewBoxData.height / rect.height;
     
-    // Apply touch offset - detect cells ABOVE where user is touching
-    const offsetClientY = clientY - TOUCH_OFFSET_Y;
-    
+    // Use actual touch point for cell detection
     const svgX = (clientX - rect.left) * scaleX + (viewBoxData.minX || 0);
-    const svgY = (offsetClientY - rect.top) * scaleY + (viewBoxData.minY || 0);
+    const svgY = (clientY - rect.top) * scaleY + (viewBoxData.minY || 0);
 
     let closestCell: HexCell | null = null;
     let closestDist = HEX_SIZE * 1.1;
@@ -163,13 +161,13 @@ export function HexGrid({
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     
-    // Calculate how far the touch point is from center (use offset touch point)
+    // Calculate how far the touch point is from center
     const touchX = clientX - rect.left;
-    const touchY = (clientY - TOUCH_OFFSET_Y) - rect.top;
+    const touchY = clientY - rect.top;
     
-    // Pan to move the touch point toward the center
+    // Pan to move the touch point toward the center, plus offset up so cell appears above finger
     const offsetX = (centerX - touchX) * (ZOOM_SCALE - 1);
-    const offsetY = (centerY - touchY) * (ZOOM_SCALE - 1);
+    const offsetY = (centerY - touchY) * (ZOOM_SCALE - 1) + PAN_OFFSET_Y;
     
     return { x: offsetX, y: offsetY };
   };
