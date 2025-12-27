@@ -121,6 +121,7 @@ export function HexGrid({
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
     isPointerDownRef.current = true;
     const cell = findCellAtPoint(e.clientX, e.clientY);
     if (cell) {
@@ -129,6 +130,7 @@ export function HexGrid({
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
+    e.preventDefault();
     if (!isPointerDownRef.current) return;
     const cell = findCellAtPoint(e.clientX, e.clientY);
     if (cell) {
@@ -136,14 +138,16 @@ export function HexGrid({
     }
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent) => {
+    e.preventDefault();
     if (isPointerDownRef.current) {
       isPointerDownRef.current = false;
       onSelectionEnd();
     }
   };
 
-  const handlePointerCancel = () => {
+  const handlePointerCancel = (e: React.PointerEvent) => {
+    e.preventDefault();
     isPointerDownRef.current = false;
     onSelectionEnd();
   };
@@ -172,7 +176,7 @@ export function HexGrid({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
+        onPointerLeave={(e) => handlePointerUp(e as React.PointerEvent)}
         onPointerCancel={handlePointerCancel}
       >
         <motion.path
