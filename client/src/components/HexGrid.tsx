@@ -195,9 +195,6 @@ export function HexGrid({
           const { x, y } = hexToPixel(cell.q, cell.r);
           const active = isSelected(cell);
           const found = isFound(cell);
-          const lastSelected = selectedCells.length > 0 &&
-            selectedCells[selectedCells.length - 1].q === cell.q &&
-            selectedCells[selectedCells.length - 1].r === cell.r;
 
           return (
             <g
@@ -240,38 +237,57 @@ export function HexGrid({
                 {cell.letter}
               </text>
 
-              {lastSelected && (
-                <g style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))", zIndex: 1000 }}>
-                  <rect
-                    x={-HEX_SIZE * 0.5}
-                    y={-HEX_SIZE * 2.8}
-                    width={HEX_SIZE * 1}
-                    height={HEX_SIZE * 1}
-                    fill="hsl(var(--primary))"
-                  />
-                  <rect
-                    x={-HEX_SIZE * 1.1}
-                    y={-HEX_SIZE * 3.2}
-                    width={HEX_SIZE * 2.2}
-                    height={HEX_SIZE * 2.2}
-                    rx={HEX_SIZE * 0.35}
-                    fill="hsl(var(--primary))"
-                  />
-                  <text
-                    y={-HEX_SIZE * 2.1}
-                    className="font-display font-black uppercase pointer-events-none"
-                    fill="hsl(var(--primary-foreground))"
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fontSize={HEX_SIZE * 1.4}
-                  >
-                    {cell.letter}
-                  </text>
-                </g>
+              {selectedCells.length > 0 &&
+                selectedCells[selectedCells.length - 1].q === cell.q &&
+                selectedCells[selectedCells.length - 1].r === cell.r && (
+                <motion.circle
+                  r={HEX_SIZE * 0.8}
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="3"
+                  strokeDasharray="4 4"
+                  initial={{ rotate: 0 }}
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                />
               )}
             </g>
           );
         })}
+
+        {selectedCells.length > 0 && (() => {
+          const lastSelectedCell = selectedCells[selectedCells.length - 1];
+          const { x, y } = hexToPixel(lastSelectedCell.q, lastSelectedCell.r);
+          return (
+            <g key="tooltip" transform={`translate(${x}, ${y})`} style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }}>
+              <rect
+                x={-HEX_SIZE * 0.5}
+                y={-HEX_SIZE * 2.8}
+                width={HEX_SIZE * 1}
+                height={HEX_SIZE * 1}
+                fill="hsl(var(--primary))"
+              />
+              <rect
+                x={-HEX_SIZE * 1.1}
+                y={-HEX_SIZE * 3.2}
+                width={HEX_SIZE * 2.2}
+                height={HEX_SIZE * 2.2}
+                rx={HEX_SIZE * 0.35}
+                fill="hsl(var(--primary))"
+              />
+              <text
+                y={-HEX_SIZE * 2.1}
+                className="font-display font-black uppercase pointer-events-none"
+                fill="hsl(var(--primary-foreground))"
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize={HEX_SIZE * 1.4}
+              >
+                {lastSelectedCell.letter}
+              </text>
+            </g>
+          );
+        })()}
       </svg>
     </div>
   );
