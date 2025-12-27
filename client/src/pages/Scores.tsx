@@ -1,10 +1,17 @@
-import { useScores } from "@/hooks/use-scores";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Medal, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useState, useEffect } from "react";
+
+interface Score {
+  id: number;
+  username: string;
+  score: number;
+  createdAt: string;
+}
 
 const formatTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
@@ -13,9 +20,18 @@ const formatTime = (seconds: number): string => {
 };
 
 export default function Scores() {
-  const { data: scores, isLoading } = useScores();
+  const [scores, setScores] = useState<Score[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const sortedScores = scores ? [...scores].sort((a, b) => a.score - b.score) : [];
+  useEffect(() => {
+    const savedScores = localStorage.getItem("hexaword_scores");
+    if (savedScores) {
+      setScores(JSON.parse(savedScores));
+    }
+    setIsLoading(false);
+  }, []);
+
+  const sortedScores = [...scores].sort((a, b) => a.score - b.score);
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-12">

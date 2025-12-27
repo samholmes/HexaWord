@@ -21,25 +21,17 @@ const formatTime = (seconds: number): string => {
 export function WinModal({ isOpen, score, playerName, onPlayAgain }: WinModalProps) {
   const [submitted, setSubmitted] = useState(false);
 
-  const { mutate: submitScore, isPending } = useMutation({
-    mutationFn: async (data: { username: string; score: number }) => {
-      const res = await fetch("/api/scores", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to submit score");
-      return res.json();
-    },
-    onSuccess: () => {
-      setSubmitted(true);
-      queryClient.invalidateQueries({ queryKey: ["/api/scores"] });
-    },
-  });
-
   const handleSubmit = () => {
     if (playerName.trim()) {
-      submitScore({ username: playerName.trim(), score });
+      const scores = JSON.parse(localStorage.getItem("hexaword_scores") || "[]");
+      scores.push({
+        id: Date.now(),
+        username: playerName.trim(),
+        score,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem("hexaword_scores", JSON.stringify(scores));
+      setSubmitted(true);
     }
   };
 
@@ -77,10 +69,10 @@ export function WinModal({ isOpen, score, playerName, onPlayAgain }: WinModalPro
                 <Button
                   onClick={handleSubmit}
                   className="w-full font-bold mb-4"
-                  disabled={!playerName.trim() || isPending}
+                  disabled={!playerName.trim()}
                   data-testid="button-submit-score"
                 >
-                  {isPending ? "Submitting..." : "Save to Leaderboard"}
+                  Save to Leaderboard
                 </Button>
               ) : (
                 <div className="bg-green-100 text-green-700 rounded-2xl p-4 font-bold mb-4">

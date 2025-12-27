@@ -1,9 +1,30 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Play, Trophy, Hexagon } from "lucide-react";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [, setLocation] = useLocation();
+  const [savedName, setSavedName] = useState("");
+
+  useEffect(() => {
+    const name = localStorage.getItem("hexaword_player_name");
+    if (name) {
+      setSavedName(name);
+    }
+  }, []);
+
+  const handleStartGame = () => {
+    setLocation("/game");
+  };
+
+  const handleStartNewGame = () => {
+    localStorage.removeItem("hexaword_player_name");
+    setSavedName("");
+    setLocation("/game");
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden">
       {/* Background Decor */}
@@ -42,12 +63,35 @@ export default function Home() {
 
         {/* Buttons */}
         <div className="flex flex-col gap-4 w-full pt-8">
-          <Link href="/game">
-            <Button size="lg" className="w-full text-xl py-8 rounded-2xl shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 bg-primary hover:bg-primary/90">
+          {savedName ? (
+            <>
+              <Button
+                onClick={handleStartGame}
+                size="lg"
+                className="w-full text-xl py-8 rounded-2xl shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 bg-primary hover:bg-primary/90"
+              >
+                <Play className="w-6 h-6 mr-3 fill-current" />
+                Continue as {savedName}
+              </Button>
+              <Button
+                onClick={handleStartNewGame}
+                variant="outline"
+                size="lg"
+                className="w-full text-xl py-8 rounded-2xl border-2 hover:bg-muted/50 transition-all duration-200"
+              >
+                New Player
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={handleStartGame}
+              size="lg"
+              className="w-full text-xl py-8 rounded-2xl shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 bg-primary hover:bg-primary/90"
+            >
               <Play className="w-6 h-6 mr-3 fill-current" />
               Start Game
             </Button>
-          </Link>
+          )}
           
           <Link href="/scores">
             <Button variant="outline" size="lg" className="w-full text-xl py-8 rounded-2xl border-2 hover:bg-muted/50 transition-all duration-200">

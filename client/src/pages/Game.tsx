@@ -1,20 +1,20 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { useGameStart } from "@/hooks/use-game";
-import { useScores } from "@/hooks/use-scores";
 import { HexGrid } from "@/components/HexGrid";
 import { WordList } from "@/components/WordList";
 import { GameHeader } from "@/components/GameUI";
 import { WinModal } from "@/components/WinModal";
 import { HexCell } from "@shared/schema";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import canvasConfetti from "canvas-confetti";
 
 export default function Game() {
+  const [, setLocation] = useLocation();
   const { data: level, isLoading, error, refetch } = useGameStart();
-  const { mutate: submitScore } = useScores();
   const [selectedCells, setSelectedCells] = useState<HexCell[]>([]);
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [foundWordsCells, setFoundWordsCells] = useState<HexCell[][]>([]);
@@ -24,6 +24,15 @@ export default function Game() {
   const [showNameInput, setShowNameInput] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+
+  // Load saved name from localStorage on mount
+  useEffect(() => {
+    const savedName = localStorage.getItem("hexaword_player_name");
+    if (savedName) {
+      setPlayerName(savedName);
+      setShowNameInput(false);
+    }
+  }, []);
   
   // Reset state when new level loads
   useEffect(() => {
@@ -119,6 +128,7 @@ export default function Game() {
 
   const handleStartGame = () => {
     if (playerName.trim()) {
+      localStorage.setItem("hexaword_player_name", playerName.trim());
       setShowNameInput(false);
     }
   };
@@ -148,7 +158,7 @@ export default function Game() {
   }
 
   return (
-    <div className="h-screen w-screen bg-background flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-background flex flex-col">
       
       {/* Name Input Modal */}
       {showNameInput && level && (
@@ -178,33 +188,40 @@ export default function Game() {
       )}
       
       {/* Header Area - Fixed at top */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 bg-white/80 backdrop-blur rounded-2xl m-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setLocation("/")}
+          data-testid="button-back-to-menu"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
         <GameHeader 
           elapsedSeconds={elapsedSeconds}
           onReset={() => {
             if (confirm("Restart game? Progress will be lost.")) refetch();
           }}
         />
+        <div className="w-10" />
       </div>
 
-      {/* Main Game Area - Takes remaining space, full width */}
-      <div className="flex-1 w-full overflow-hidden relative flex flex-col items-center justify-center px-0">
+      {/* Main Game Area - Takes remaining space */}
+      <div className="flex-1 w-full overflow-hidden relative">
         
         {/* Background decorative blob */}
         <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-secondary/5 to-accent/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
         
-        {/* Hex Grid - Fills full width */}
-        <div className="w-full h-full flex items-center justify-center">
-          <HexGrid
-            grid={level.grid}
-            selectedCells={selectedCells}
-            foundWordsCells={foundWordsCells}
-            onSelectionStart={handleSelectionStart}
-            onSelectionMove={handleSelectionMove}
-            onSelectionEnd={handleSelectionEnd}
-            isProcessing={false}
-          />
-        </div>
+        {/* Hex Grid - Fills full width and height */}
+        <HexGrid
+          grid={level.grid}
+          selectedCells={selectedCells}
+          foundWordsCells={foundWordsCells}
+          onSelectionStart={handleSelectionStart}
+          onSelectionMove={handleSelectionMove}
+          onSelectionEnd={handleSelectionEnd}
+          isProcessing={false}
+        />
       </div>
 
       {/* Word List - Fixed at bottom, horizontally scrollable */}
@@ -220,7 +237,12 @@ export default function Game() {
         isOpen={isWon} 
         score={elapsedSeconds}
         playerName={playerName}
-        onPlayAgain={() => refetch()} 
+        onPlayAgain={() => {
+          setPlayerName("");
+          localStorage.removeItem("hexaword_player_name");
+          setShowNameInput(true);
+          refetch();
+        }}
       />
     </div>
   );
