@@ -128,17 +128,22 @@ export function HexGrid({
   };
 
   const findCellAtPoint = (clientX: number, clientY: number): HexCell | null => {
-    const container = containerRef.current;
-    if (!container) return null;
+    const svg = svgRef.current;
+    if (!svg) return null;
 
-    // Use container bounds (stable, not transformed)
-    const rect = container.getBoundingClientRect();
-    const scaleX = viewBoxData.width / rect.width;
-    const scaleY = viewBoxData.height / rect.height;
+    // Use SVG's CTM to properly convert screen coordinates to viewBox coordinates
+    // This accounts for the SVG being centered and letterboxed within the container
+    const point = svg.createSVGPoint();
+    point.x = clientX;
+    point.y = clientY;
     
-    // Map touch point to viewBox coordinates
-    const svgX = (clientX - rect.left) * scaleX + (viewBoxData.minX || 0);
-    const svgY = (clientY - rect.top) * scaleY + (viewBoxData.minY || 0);
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return null;
+    
+    // Transform screen point to SVG viewBox coordinates
+    const svgPoint = point.matrixTransform(ctm.inverse());
+    const svgX = svgPoint.x;
+    const svgY = svgPoint.y;
 
     let closestCell: HexCell | null = null;
     let closestDist = HEX_SIZE * 1.1;
