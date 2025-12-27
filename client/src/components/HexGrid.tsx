@@ -195,9 +195,9 @@ export function HexGrid({
     const touchX = clientX - rect.left;
     const touchY = clientY - rect.top;
     
-    // Zoom to touch point but offset upward so cell appears above finger
+    // Zoom to touch point but offset downward so cell appears above finger
     const offsetX = (centerX - touchX) * (ZOOM_SCALE - 1);
-    const offsetY = (centerY - touchY) * (ZOOM_SCALE - 1) + FINGER_OFFSET_PX;
+    const offsetY = (centerY - touchY) * (ZOOM_SCALE - 1) - FINGER_OFFSET_PX;
     
     return { x: offsetX, y: offsetY };
   };
