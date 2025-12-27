@@ -192,7 +192,7 @@ export default function Game() {
   }
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col">
+    <div className="fixed inset-0 bg-background">
       
       {/* Name Input Modal */}
       {showNameInput && level && (
@@ -220,33 +220,12 @@ export default function Game() {
           </div>
         </div>
       )}
-      
-      {/* Header Area - Fixed at top */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 bg-white/80 backdrop-blur rounded-2xl m-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setLocation("/")}
-          data-testid="button-back-to-menu"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <GameHeader 
-          elapsedSeconds={elapsedSeconds}
-          onReset={() => {
-            if (confirm("Restart game? Progress will be lost.")) refetch();
-          }}
-        />
-        <div className="w-10" />
-      </div>
 
-      {/* Main Game Area - Takes remaining space */}
-      <div className="flex-1 w-full overflow-hidden relative">
-        
-        {/* Background decorative blob */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-secondary/5 to-accent/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
-        
-        {/* Hex Grid - Fills full width and height */}
+      {/* Background decorative blob */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-secondary/5 to-accent/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+      
+      {/* Hex Grid - Fullscreen, centered */}
+      <div className="absolute inset-0 flex items-center justify-center z-10">
         <HexGrid
           grid={level.grid}
           selectedCells={selectedCells}
@@ -258,12 +237,35 @@ export default function Game() {
         />
       </div>
 
-      {/* Word List - Fixed at bottom, horizontally scrollable */}
-      <div className="flex-shrink-0 border-t border-border/30 bg-background/80 backdrop-blur-sm">
-        <WordList 
-          words={level.words} 
-          foundWords={foundWords} 
-        />
+      {/* Header Area - Absolute overlay at top with safe-area padding */}
+      <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none p-2 pt-safe">
+        <div className="flex items-center justify-between px-4 py-2 bg-white/80 dark:bg-background/80 backdrop-blur rounded-2xl" style={{ pointerEvents: "auto" }}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLocation("/")}
+            data-testid="button-back-to-menu"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <GameHeader 
+            elapsedSeconds={elapsedSeconds}
+            onReset={() => {
+              if (confirm("Restart game? Progress will be lost.")) refetch();
+            }}
+          />
+          <div className="w-10" />
+        </div>
+      </div>
+
+      {/* Word List - Absolute overlay at bottom with safe-area padding */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none pb-safe">
+        <div className="bg-background/80 backdrop-blur-sm border-t border-border/30" style={{ pointerEvents: "auto" }}>
+          <WordList 
+            words={level.words} 
+            foundWords={foundWords} 
+          />
+        </div>
       </div>
 
       {/* Win Modal */}

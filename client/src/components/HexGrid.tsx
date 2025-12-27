@@ -221,10 +221,9 @@ export function HexGrid({
   return (
     <div
       ref={containerRef}
-      className="w-full select-none flex items-center justify-center overflow-hidden relative"
+      className="w-full h-full select-none flex items-center justify-center overflow-hidden relative"
       style={{
         touchAction: "none",
-        maxHeight: "100%",
       }}
     >
       {/* Invisible overlay for stable touch tracking */}
