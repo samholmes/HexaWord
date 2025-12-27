@@ -5,7 +5,6 @@ import type { HexCell } from "@shared/schema";
 
 const HEX_SIZE = 40;
 const ZOOM_SCALE = 1.6;
-const PAN_OFFSET_Y = -100; // Pan the board up so selected cell appears above finger
 const HEX_WIDTH = HEX_SIZE * 2;
 const HEX_HEIGHT = Math.sqrt(3) * HEX_SIZE;
 const SPACING = 1.08;
@@ -166,9 +165,9 @@ export function HexGrid({
     const touchX = clientX - rect.left;
     const touchY = clientY - rect.top;
     
-    // Pan to move the touch point toward the center, plus offset up so cell appears above finger
+    // Zoom directly to the touch point - no offset
     const offsetX = (centerX - touchX) * (ZOOM_SCALE - 1);
-    const offsetY = (centerY - touchY) * (ZOOM_SCALE - 1) + PAN_OFFSET_Y;
+    const offsetY = (centerY - touchY) * (ZOOM_SCALE - 1);
     
     return { x: offsetX, y: offsetY };
   };
