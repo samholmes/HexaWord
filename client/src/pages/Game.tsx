@@ -42,7 +42,14 @@ export default function Game() {
       setSelectedCells([]);
       setElapsedSeconds(0);
       setIsWon(false);
-      setShowNameInput(true);
+      // Only show name input if no saved name in localStorage
+      const savedName = localStorage.getItem("hexaword_player_name");
+      if (savedName) {
+        setPlayerName(savedName);
+        setShowNameInput(false);
+      } else {
+        setShowNameInput(true);
+      }
     }
   }, [level]);
 

@@ -1,9 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { Trophy } from "lucide-react";
-import { queryClient } from "@/lib/queryClient";
 
 interface WinModalProps {
   isOpen: boolean;
@@ -19,10 +17,11 @@ const formatTime = (seconds: number): string => {
 };
 
 export function WinModal({ isOpen, score, playerName, onPlayAgain }: WinModalProps) {
-  const [submitted, setSubmitted] = useState(false);
+  const hasSubmittedRef = useRef(false);
 
-  const handleSubmit = () => {
-    if (playerName.trim()) {
+  // Auto-save score to leaderboard when modal opens
+  useEffect(() => {
+    if (isOpen && playerName.trim() && !hasSubmittedRef.current) {
       const scores = JSON.parse(localStorage.getItem("hexaword_scores") || "[]");
       scores.push({
         id: Date.now(),
@@ -31,9 +30,14 @@ export function WinModal({ isOpen, score, playerName, onPlayAgain }: WinModalPro
         createdAt: new Date().toISOString()
       });
       localStorage.setItem("hexaword_scores", JSON.stringify(scores));
-      setSubmitted(true);
+      hasSubmittedRef.current = true;
     }
-  };
+    
+    // Reset when modal closes
+    if (!isOpen) {
+      hasSubmittedRef.current = false;
+    }
+  }, [isOpen, playerName, score]);
 
   return (
     <AnimatePresence>
@@ -65,20 +69,9 @@ export function WinModal({ isOpen, score, playerName, onPlayAgain }: WinModalPro
                 <p className="text-4xl font-display font-black text-primary font-mono">{formatTime(score)}</p>
               </div>
 
-              {!submitted ? (
-                <Button
-                  onClick={handleSubmit}
-                  className="w-full font-bold mb-4"
-                  disabled={!playerName.trim()}
-                  data-testid="button-submit-score"
-                >
-                  Save to Leaderboard
-                </Button>
-              ) : (
-                <div className="bg-green-100 text-green-700 rounded-2xl p-4 font-bold mb-4">
-                  Time saved to leaderboard!
-                </div>
-              )}
+              <div className="bg-green-100 text-green-700 rounded-2xl p-4 font-bold mb-4" data-testid="text-score-saved">
+                Time saved to leaderboard!
+              </div>
 
               <Button
                 onClick={onPlayAgain}
