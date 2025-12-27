@@ -178,7 +178,7 @@ export default function Game() {
       )}
       
       {/* Header Area - Fixed at top */}
-      <div className="flex-shrink-0 px-4 py-3">
+      <div className="flex-shrink-0">
         <GameHeader 
           elapsedSeconds={elapsedSeconds}
           onReset={() => {
