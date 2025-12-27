@@ -107,12 +107,12 @@ export function HexGrid({
   };
 
   return (
-    <div className="w-full h-full flex items-center justify-center select-none touch-none">
+    <div className="w-full h-full select-none" style={{ touchAction: "none" }}>
       <svg
         ref={svgRef}
         viewBox={calculateViewBox()}
-        className="w-full h-full drop-shadow-xl max-h-[90vh] max-w-[90vw]"
-        style={{ aspectRatio: "1", objectFit: "contain" }}
+        className="w-full h-full drop-shadow-xl"
+        preserveAspectRatio="xMidYMid meet"
         onPointerUp={onSelectionEnd}
         onPointerLeave={onSelectionEnd}
       >

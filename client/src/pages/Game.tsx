@@ -148,24 +148,22 @@ export default function Game() {
         />
       </div>
 
-      {/* Main Game Area - Takes remaining space */}
-      <div className="flex-1 w-full flex flex-col overflow-hidden relative">
+      {/* Main Game Area - Takes remaining space, full width */}
+      <div className="flex-1 w-screen overflow-hidden relative">
         
         {/* Background decorative blob */}
         <div className="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-tr from-primary/10 via-secondary/10 to-accent/10 rounded-full blur-3xl -z-10 animate-pulse-slow pointer-events-none"></div>
         
-        {/* Hex Grid - Centered and responsive */}
-        <div className="flex-1 flex items-center justify-center overflow-hidden p-4">
-          <HexGrid
-            grid={level.grid}
-            selectedCells={selectedCells}
-            foundWordsCells={foundWordsCells}
-            onSelectionStart={handleSelectionStart}
-            onSelectionMove={handleSelectionMove}
-            onSelectionEnd={handleSelectionEnd}
-            isProcessing={false}
-          />
-        </div>
+        {/* Hex Grid - Fills full width and height */}
+        <HexGrid
+          grid={level.grid}
+          selectedCells={selectedCells}
+          foundWordsCells={foundWordsCells}
+          onSelectionStart={handleSelectionStart}
+          onSelectionMove={handleSelectionMove}
+          onSelectionEnd={handleSelectionEnd}
+          isProcessing={false}
+        />
       </div>
 
       {/* Word List - Fixed at bottom, horizontally scrollable */}
