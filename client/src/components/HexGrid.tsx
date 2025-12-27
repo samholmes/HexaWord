@@ -1,9 +1,11 @@
-import { useRef, useCallback, useMemo } from "react";
+import { useRef, useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { HexCell } from "@shared/schema";
 
 const HEX_SIZE = 40;
+const ZOOM_SCALE = 1.6;
+const ZOOM_OFFSET_Y = -80; // Pan up so finger doesn't cover selection
 const HEX_WIDTH = HEX_SIZE * 2;
 const HEX_HEIGHT = Math.sqrt(3) * HEX_SIZE;
 const SPACING = 1.08;
@@ -46,8 +48,13 @@ export function HexGrid({
   onSelectionEnd,
 }: HexGridProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const isPointerDownRef = useRef(false);
   const cellPositionsRef = useRef<Map<string, { cell: HexCell; x: number; y: number }>>(new Map());
+  
+  // Zoom and pan state
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
 
   const hexToPixel = useCallback((q: number, r: number): Point => {
     const x = HEX_SIZE * (3 / 2 * q) * SPACING;
@@ -145,11 +152,32 @@ export function HexGrid({
     return closestCell;
   };
 
+  const calculatePanOffset = (clientX: number, clientY: number) => {
+    const container = containerRef.current;
+    if (!container) return { x: 0, y: 0 };
+    
+    const rect = container.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    // Calculate how far the touch point is from center
+    const touchX = clientX - rect.left;
+    const touchY = clientY - rect.top;
+    
+    // Pan to move the touch point toward the center, offset up from finger
+    const offsetX = (centerX - touchX) * (ZOOM_SCALE - 1);
+    const offsetY = (centerY - touchY) * (ZOOM_SCALE - 1) + ZOOM_OFFSET_Y;
+    
+    return { x: offsetX, y: offsetY };
+  };
+
   const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     isPointerDownRef.current = true;
     const cell = findCellAtPoint(e.clientX, e.clientY);
     if (cell) {
+      setIsZoomed(true);
+      setPanOffset(calculatePanOffset(e.clientX, e.clientY));
       onSelectionStart(cell);
     }
   };
@@ -159,6 +187,7 @@ export function HexGrid({
     if (!isPointerDownRef.current) return;
     const cell = findCellAtPoint(e.clientX, e.clientY);
     if (cell) {
+      setPanOffset(calculatePanOffset(e.clientX, e.clientY));
       onSelectionMove(cell);
     }
   };
@@ -167,6 +196,8 @@ export function HexGrid({
     e.preventDefault();
     if (isPointerDownRef.current) {
       isPointerDownRef.current = false;
+      setIsZoomed(false);
+      setPanOffset({ x: 0, y: 0 });
       onSelectionEnd();
     }
   };
@@ -174,6 +205,8 @@ export function HexGrid({
   const handlePointerCancel = (e: React.PointerEvent) => {
     e.preventDefault();
     isPointerDownRef.current = false;
+    setIsZoomed(false);
+    setPanOffset({ x: 0, y: 0 });
     onSelectionEnd();
   };
 
@@ -181,7 +214,8 @@ export function HexGrid({
 
   return (
     <div
-      className="w-full select-none flex items-center justify-center"
+      ref={containerRef}
+      className="w-full select-none flex items-center justify-center overflow-hidden"
       style={{
         touchAction: "none",
         maxHeight: "100%",
@@ -196,6 +230,11 @@ export function HexGrid({
           height: "auto",
           maxHeight: "100%",
           aspectRatio: `${aspectRatio}`,
+          transform: isZoomed 
+            ? `scale(${ZOOM_SCALE}) translate(${panOffset.x / ZOOM_SCALE}px, ${panOffset.y / ZOOM_SCALE}px)`
+            : "scale(1) translate(0, 0)",
+          transition: "transform 0.15s ease-out",
+          transformOrigin: "center center",
         }}
         preserveAspectRatio="xMidYMid meet"
         onPointerDown={handlePointerDown}
