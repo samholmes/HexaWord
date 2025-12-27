@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface GameHeaderProps {
   currentWord: string;
