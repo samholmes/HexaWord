@@ -8,13 +8,20 @@ interface WordListProps {
 }
 
 export function WordList({ words, foundWords }: WordListProps) {
+  const sortedWords = [...words].sort((a, b) => {
+    const aFound = foundWords.includes(a);
+    const bFound = foundWords.includes(b);
+    if (aFound === bFound) return 0;
+    return aFound ? 1 : -1;
+  });
+
   return (
     <div className="w-full overflow-x-auto overflow-y-hidden">
       <div className="px-4 py-3 flex items-center gap-3 min-w-max">
         <h3 className="text-sm font-display font-bold text-muted-foreground uppercase tracking-wider flex-shrink-0">
           Words to Find:
         </h3>
-        {words.map((word) => {
+        {sortedWords.map((word) => {
           const isFound = foundWords.includes(word);
           return (
             <motion.div
