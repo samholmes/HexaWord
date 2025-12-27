@@ -83,7 +83,7 @@ export default function Game() {
   };
 
   const handleSelectionMove = (cell: HexCell) => {
-    if (isWon || selectedCells.length === 0 || showNameInput) return;
+    if (isWon || selectedCells.length === 0 || showNameInput || !level) return;
 
     const lastCell = selectedCells[selectedCells.length - 1];
 
@@ -98,7 +98,34 @@ export default function Game() {
     }
 
     if (areNeighbors(lastCell, cell) && !selectedCells.some(c => c.q === cell.q && c.r === cell.r)) {
-      setSelectedCells(prev => [...prev, cell]);
+      const newSelection = [...selectedCells, cell];
+      const word = newSelection.map(c => c.letter).join("");
+      
+      if (level.words.includes(word) && !foundWords.includes(word)) {
+        setFoundWords(prev => [...prev, word]);
+        setFoundWordsCells(prev => [...prev, newSelection]);
+        setSelectedCells([]);
+
+        toast({
+          title: "Word Found!",
+          description: `"${word}"`,
+          className: "bg-green-500 text-white border-none font-bold",
+          duration: 1500,
+        });
+
+        if (foundWords.length + 1 === level.words.length) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          setIsWon(true);
+          canvasConfetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#FFD700', '#FF69B4', '#00BFFF']
+          });
+        }
+      } else {
+        setSelectedCells(newSelection);
+      }
     }
   };
 
