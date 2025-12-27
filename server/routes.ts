@@ -208,7 +208,7 @@ export async function registerRoutes(
   });
 
   app.get(api.scores.list.path, async (_req, res) => {
-    const scores = await storage.getTopScores();
+    const scores = await storage.getAllScores();
     res.json(scores);
   });
 

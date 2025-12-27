@@ -4,14 +4,8 @@ import { ArrowLeft, Medal, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { useState, useEffect } from "react";
-
-interface Score {
-  id: number;
-  username: string;
-  score: number;
-  createdAt: string;
-}
+import { useQuery } from "@tanstack/react-query";
+import type { Score } from "@shared/schema";
 
 const formatTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
@@ -20,18 +14,9 @@ const formatTime = (seconds: number): string => {
 };
 
 export default function Scores() {
-  const [scores, setScores] = useState<Score[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const savedScores = localStorage.getItem("hexaword_scores");
-    if (savedScores) {
-      setScores(JSON.parse(savedScores));
-    }
-    setIsLoading(false);
-  }, []);
-
-  const sortedScores = [...scores].sort((a, b) => a.score - b.score);
+  const { data: scores = [], isLoading } = useQuery<Score[]>({
+    queryKey: ['/api/scores'],
+  });
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-12">
@@ -52,9 +37,9 @@ export default function Scores() {
         <div className="bg-white rounded-3xl shadow-xl shadow-black/5 border border-border/50 overflow-hidden">
           {isLoading ? (
             <div className="p-12 text-center text-muted-foreground">Loading leaderboard...</div>
-          ) : sortedScores && sortedScores.length > 0 ? (
+          ) : scores && scores.length > 0 ? (
             <div className="divide-y divide-border/50">
-              {sortedScores.map((score, index) => {
+              {scores.map((score, index) => {
                 const isTop3 = index < 3;
                 return (
                   <motion.div
