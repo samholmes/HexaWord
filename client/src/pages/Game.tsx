@@ -250,9 +250,6 @@ export default function Game() {
           </Button>
           <GameHeader 
             elapsedSeconds={elapsedSeconds}
-            onReset={() => {
-              if (confirm("Restart game? Progress will be lost.")) refetch();
-            }}
           />
           <div className="w-10" />
         </div>

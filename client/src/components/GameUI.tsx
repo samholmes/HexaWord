@@ -1,11 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Clock } from "lucide-react";
 
 interface GameHeaderProps {
   elapsedSeconds: number;
-  onReset?: () => void;
 }
 
 const formatTime = (seconds: number): string => {
@@ -14,7 +11,7 @@ const formatTime = (seconds: number): string => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
-export function GameHeader({ elapsedSeconds, onReset }: GameHeaderProps) {
+export function GameHeader({ elapsedSeconds }: GameHeaderProps) {
   return (
     <div className="w-full flex justify-between items-center px-4 py-2">
       <div className="bg-white/80 backdrop-blur rounded-2xl p-3 shadow-sm border border-white/50 flex items-center gap-2">
@@ -26,18 +23,6 @@ export function GameHeader({ elapsedSeconds, onReset }: GameHeaderProps) {
           <span className="text-xl font-display font-black leading-none font-mono">{formatTime(elapsedSeconds)}</span>
         </div>
       </div>
-      
-      {onReset && (
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={onReset}
-          className="hover:bg-destructive/10 hover:text-destructive rounded-full"
-          data-testid="button-reset-game"
-        >
-          <RotateCcw className="w-5 h-5" />
-        </Button>
-      )}
     </div>
   );
 }
