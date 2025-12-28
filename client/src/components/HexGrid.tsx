@@ -374,7 +374,7 @@ export function HexGrid({
           const hexBottom = HEX_HEIGHT / 2;
           const handleWidth = HEX_SIZE * 1.1;
           const handleHeight = 50;
-          const topCurve = 18;
+          const curveOutward = 16;
           const bottomRadius = 12;
           
           return (
@@ -387,20 +387,20 @@ export function HexGrid({
             >
               <path
                 d={`
-                  M ${-handleWidth / 2 - topCurve} ${hexBottom - topCurve * 0.3}
-                  C ${-handleWidth / 2 - topCurve * 0.3} ${hexBottom + topCurve * 0.5}
-                    ${-handleWidth / 2} ${hexBottom + topCurve}
-                    ${-handleWidth / 2} ${hexBottom + topCurve}
+                  M ${-handleWidth / 2} ${hexBottom}
+                  C ${-handleWidth / 2 - curveOutward} ${hexBottom}
+                    ${-handleWidth / 2 - curveOutward} ${hexBottom + curveOutward * 1.5}
+                    ${-handleWidth / 2} ${hexBottom + curveOutward * 1.5}
                   L ${-handleWidth / 2} ${hexBottom + handleHeight - bottomRadius}
                   Q ${-handleWidth / 2} ${hexBottom + handleHeight}
                     ${-handleWidth / 2 + bottomRadius} ${hexBottom + handleHeight}
                   L ${handleWidth / 2 - bottomRadius} ${hexBottom + handleHeight}
                   Q ${handleWidth / 2} ${hexBottom + handleHeight}
                     ${handleWidth / 2} ${hexBottom + handleHeight - bottomRadius}
-                  L ${handleWidth / 2} ${hexBottom + topCurve}
-                  C ${handleWidth / 2} ${hexBottom + topCurve}
-                    ${handleWidth / 2 + topCurve * 0.3} ${hexBottom + topCurve * 0.5}
-                    ${handleWidth / 2 + topCurve} ${hexBottom - topCurve * 0.3}
+                  L ${handleWidth / 2} ${hexBottom + curveOutward * 1.5}
+                  C ${handleWidth / 2 + curveOutward} ${hexBottom + curveOutward * 1.5}
+                    ${handleWidth / 2 + curveOutward} ${hexBottom}
+                    ${handleWidth / 2} ${hexBottom}
                   Z
                 `}
                 fill="hsl(var(--primary))"
