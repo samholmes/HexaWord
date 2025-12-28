@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: hexaword-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hexaword
+    ports:
+      - "5432:5432"
+    volumes:
+      - hexaword-data:/var/lib/postgresql/data
+
+volumes:
+  hexaword-data:
+
