@@ -352,41 +352,47 @@ export function HexGrid({
               {selectedCells.length > 0 &&
                 selectedCells[selectedCells.length - 1].q === cell.q &&
                 selectedCells[selectedCells.length - 1].r === cell.r && (
-                <>
-                  <motion.circle
-                    r={HEX_SIZE * 0.8}
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="3"
-                    strokeDasharray="4 4"
-                    initial={{ rotate: 0 }}
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-                  />
-                  {/* Purple tooltip pointer below the cell connecting to finger */}
-                  <motion.g
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.1 }}
-                  >
-                    <polygon
-                      points={`0,${HEX_HEIGHT / 2 + 8} -12,${HEX_HEIGHT / 2 + 24} 12,${HEX_HEIGHT / 2 + 24}`}
-                      fill="hsl(var(--primary))"
-                    />
-                    <rect
-                      x={-20}
-                      y={HEX_HEIGHT / 2 + 22}
-                      width={40}
-                      height={50}
-                      rx={8}
-                      fill="hsl(var(--primary))"
-                    />
-                  </motion.g>
-                </>
+                <motion.circle
+                  r={HEX_SIZE * 0.8}
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="3"
+                  strokeDasharray="4 4"
+                  initial={{ rotate: 0 }}
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                />
               )}
             </g>
           );
         })}
+
+        {/* Tooltip rendered last to ensure it's on top of all cells */}
+        {selectedCells.length > 0 && (() => {
+          const lastCell = selectedCells[selectedCells.length - 1];
+          const { x, y } = hexToPixel(lastCell.q, lastCell.r);
+          return (
+            <motion.g
+              transform={`translate(${x}, ${y})`}
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.1 }}
+            >
+              <polygon
+                points={`0,${HEX_HEIGHT / 2 + 8} -12,${HEX_HEIGHT / 2 + 24} 12,${HEX_HEIGHT / 2 + 24}`}
+                fill="hsl(var(--primary))"
+              />
+              <rect
+                x={-20}
+                y={HEX_HEIGHT / 2 + 22}
+                width={40}
+                height={50}
+                rx={8}
+                fill="hsl(var(--primary))"
+              />
+            </motion.g>
+          );
+        })()}
 
       </svg>
     </div>
