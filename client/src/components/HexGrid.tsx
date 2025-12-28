@@ -367,27 +367,33 @@ export function HexGrid({
           );
         })}
 
-        {/* Tooltip rendered last to ensure it's on top of all cells */}
+        {/* Handle/paddle rendered last to ensure it's on top of all cells */}
         {selectedCells.length > 0 && (() => {
           const lastCell = selectedCells[selectedCells.length - 1];
           const { x, y } = hexToPixel(lastCell.q, lastCell.r);
+          const handleWidth = 28;
+          const handleHeight = 55;
+          const handleTop = HEX_HEIGHT / 2 - 2;
+          const cornerRadius = 10;
+          
           return (
             <motion.g
               transform={`translate(${x}, ${y})`}
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.1 }}
+              initial={{ opacity: 0, scaleY: 0 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              style={{ transformOrigin: `0px ${handleTop}px` }}
+              transition={{ duration: 0.08 }}
             >
-              <polygon
-                points={`0,${HEX_HEIGHT / 2 + 8} -12,${HEX_HEIGHT / 2 + 24} 12,${HEX_HEIGHT / 2 + 24}`}
-                fill="hsl(var(--primary))"
-              />
-              <rect
-                x={-20}
-                y={HEX_HEIGHT / 2 + 22}
-                width={40}
-                height={50}
-                rx={8}
+              <path
+                d={`
+                  M ${-handleWidth / 2} ${handleTop}
+                  L ${handleWidth / 2} ${handleTop}
+                  L ${handleWidth / 2} ${handleTop + handleHeight - cornerRadius}
+                  Q ${handleWidth / 2} ${handleTop + handleHeight} ${handleWidth / 2 - cornerRadius} ${handleTop + handleHeight}
+                  L ${-handleWidth / 2 + cornerRadius} ${handleTop + handleHeight}
+                  Q ${-handleWidth / 2} ${handleTop + handleHeight} ${-handleWidth / 2} ${handleTop + handleHeight - cornerRadius}
+                  Z
+                `}
                 fill="hsl(var(--primary))"
               />
             </motion.g>
