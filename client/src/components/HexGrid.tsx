@@ -417,45 +417,49 @@ export function HexGrid({
           const hexPos = hexToPixel(lastCell.q, lastCell.r);
           const hexBottom = HEX_HEIGHT / 2;
           
-          // Anchor points at hex bottom (left and right sides of hex base)
-          const anchorWidth = HEX_SIZE * 0.8;
-          const anchorLeftX = hexPos.x - anchorWidth / 2;
-          const anchorRightX = hexPos.x + anchorWidth / 2;
-          const anchorY = hexPos.y + hexBottom;
+          // Top anchor points: bottom-left and bottom-right of hex cell
+          const hexBottomLeftX = hexPos.x - HEX_SIZE * 0.5;
+          const hexBottomRightX = hexPos.x + HEX_SIZE * 0.5;
+          const topY = hexPos.y + hexBottom;
           
-          // Bubble center follows touch, but offset below for visibility
-          const bubbleX = touchSvgPos.x;
-          const bubbleY = touchSvgPos.y + 25;
-          const bubbleRadius = 22;
+          // Circle centered at touch point
+          const bubbleRadius = 20;
+          const centerX = touchSvgPos.x;
+          const centerY = touchSvgPos.y;
           
-          // Calculate stretch distance for liquid effect
-          const stretchY = Math.max(0, bubbleY - anchorY);
-          const stretchFactor = Math.min(1, stretchY / 100);
+          // 5 key points on the circle:
+          // - Bottom point (center X, center Y + radius)
+          // - Left point (center X - radius, center Y)
+          // - Right point (center X + radius, center Y)
+          const bottomX = centerX;
+          const bottomY = centerY + bubbleRadius;
+          const leftX = centerX - bubbleRadius;
+          const leftY = centerY;
+          const rightX = centerX + bubbleRadius;
+          const rightY = centerY;
           
-          // Neck width narrows as it stretches
-          const neckWidth = anchorWidth * (0.4 + 0.3 * (1 - stretchFactor));
+          // Calculate stretch: how far touch is from hex on Y
+          const stretchDistance = Math.max(0, centerY - topY);
+          const stretchFactor = Math.min(1, stretchDistance / 80);
           
-          // Bezier control points for liquid curves
-          const midY = anchorY + stretchY * 0.4;
+          // Bezier control points move toward centerX as stretch increases
+          // When close to hex, controls are at anchor X; when far, controls move to centerX
+          const leftControlX = hexBottomLeftX + (centerX - hexBottomLeftX) * stretchFactor * 0.7;
+          const rightControlX = hexBottomRightX + (centerX - hexBottomRightX) * stretchFactor * 0.7;
+          const controlY = topY + stretchDistance * 0.5;
           
           return (
             <g>
               <path
                 d={`
-                  M ${anchorLeftX} ${anchorY}
-                  C ${anchorLeftX - 8} ${anchorY + 5}
-                    ${bubbleX - neckWidth / 2 - 10} ${midY}
-                    ${bubbleX - neckWidth / 2} ${bubbleY - bubbleRadius * 0.7}
-                  C ${bubbleX - neckWidth / 2 - 5} ${bubbleY}
-                    ${bubbleX - bubbleRadius} ${bubbleY + bubbleRadius * 0.3}
-                    ${bubbleX - bubbleRadius} ${bubbleY + bubbleRadius * 0.3}
-                  A ${bubbleRadius} ${bubbleRadius} 0 1 0 ${bubbleX + bubbleRadius} ${bubbleY + bubbleRadius * 0.3}
-                  C ${bubbleX + bubbleRadius} ${bubbleY + bubbleRadius * 0.3}
-                    ${bubbleX + neckWidth / 2 + 5} ${bubbleY}
-                    ${bubbleX + neckWidth / 2} ${bubbleY - bubbleRadius * 0.7}
-                  C ${bubbleX + neckWidth / 2 + 10} ${midY}
-                    ${anchorRightX + 8} ${anchorY + 5}
-                    ${anchorRightX} ${anchorY}
+                  M ${hexBottomLeftX} ${topY}
+                  C ${leftControlX} ${controlY}
+                    ${leftX} ${leftY - bubbleRadius * 0.5}
+                    ${leftX} ${leftY}
+                  A ${bubbleRadius} ${bubbleRadius} 0 1 0 ${rightX} ${rightY}
+                  C ${rightX} ${rightY - bubbleRadius * 0.5}
+                    ${rightControlX} ${controlY}
+                    ${hexBottomRightX} ${topY}
                   Z
                 `}
                 fill="hsl(var(--primary))"
