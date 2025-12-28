@@ -56,6 +56,8 @@ export function HexGrid({
   const [isZoomed, setIsZoomed] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isActivelyPanning, setIsActivelyPanning] = useState(false);
+  // Touch position in SVG coordinates for liquid handle
+  const [touchSvgPos, setTouchSvgPos] = useState<{ x: number; y: number } | null>(null);
 
   const hexToPixel = useCallback((q: number, r: number): Point => {
     const x = HEX_SIZE * (3 / 2 * q) * SPACING;
@@ -183,6 +185,44 @@ export function HexGrid({
     return closestCell;
   };
 
+  // Convert client coordinates to SVG coordinates for liquid handle
+  const clientToSvgCoords = (clientX: number, clientY: number): { x: number; y: number } | null => {
+    const container = containerRef.current;
+    if (!container) return null;
+
+    const containerRect = container.getBoundingClientRect();
+    const containerAspect = containerRect.width / containerRect.height;
+    const svgAspect = viewBoxData.width / viewBoxData.height;
+    
+    let renderedWidth: number;
+    let renderedHeight: number;
+    let offsetX: number;
+    let offsetY: number;
+    
+    if (containerAspect > svgAspect) {
+      renderedHeight = containerRect.height;
+      renderedWidth = renderedHeight * svgAspect;
+      offsetX = (containerRect.width - renderedWidth) / 2;
+      offsetY = 0;
+    } else {
+      renderedWidth = containerRect.width;
+      renderedHeight = renderedWidth / svgAspect;
+      offsetX = 0;
+      offsetY = (containerRect.height - renderedHeight) / 2;
+    }
+    
+    const touchX = clientX - containerRect.left - offsetX;
+    const touchY = clientY - containerRect.top - offsetY;
+    
+    const scaleX = viewBoxData.width / renderedWidth;
+    const scaleY = viewBoxData.height / renderedHeight;
+    
+    return {
+      x: touchX * scaleX + (viewBoxData.minX || 0),
+      y: touchY * scaleY + (viewBoxData.minY || 0)
+    };
+  };
+
   const calculatePanOffset = (clientX: number, clientY: number) => {
     const container = containerRef.current;
     if (!container) return { x: 0, y: 0 };
@@ -207,9 +247,10 @@ export function HexGrid({
     isPointerDownRef.current = true;
     const cell = findCellAtPoint(e.clientX, e.clientY);
     if (cell) {
-      setIsActivelyPanning(false); // Allow transition for initial zoom
+      setIsActivelyPanning(false);
       setIsZoomed(true);
       setPanOffset(calculatePanOffset(e.clientX, e.clientY));
+      setTouchSvgPos(clientToSvgCoords(e.clientX, e.clientY));
       onSelectionStart(cell);
     }
   };
@@ -217,10 +258,11 @@ export function HexGrid({
   const handlePointerMove = (e: React.PointerEvent) => {
     e.preventDefault();
     if (!isPointerDownRef.current) return;
-    setIsActivelyPanning(true); // Disable transition during panning
+    setIsActivelyPanning(true);
     const cell = findCellAtPoint(e.clientX, e.clientY);
     if (cell) {
       setPanOffset(calculatePanOffset(e.clientX, e.clientY));
+      setTouchSvgPos(clientToSvgCoords(e.clientX, e.clientY));
       onSelectionMove(cell);
     }
   };
@@ -229,9 +271,10 @@ export function HexGrid({
     e.preventDefault();
     if (isPointerDownRef.current) {
       isPointerDownRef.current = false;
-      setIsActivelyPanning(false); // Re-enable transition for zoom out
+      setIsActivelyPanning(false);
       setIsZoomed(false);
       setPanOffset({ x: 0, y: 0 });
+      setTouchSvgPos(null);
       onSelectionEnd();
     }
   };
@@ -242,6 +285,7 @@ export function HexGrid({
     setIsActivelyPanning(false);
     setIsZoomed(false);
     setPanOffset({ x: 0, y: 0 });
+    setTouchSvgPos(null);
     onSelectionEnd();
   };
 
@@ -367,45 +411,56 @@ export function HexGrid({
           );
         })}
 
-        {/* Handle/paddle rendered last to ensure it's on top of all cells */}
-        {selectedCells.length > 0 && (() => {
+        {/* Liquid handle: bubble at touch point connected to hex bottom */}
+        {selectedCells.length > 0 && touchSvgPos && (() => {
           const lastCell = selectedCells[selectedCells.length - 1];
-          const { x, y } = hexToPixel(lastCell.q, lastCell.r);
+          const hexPos = hexToPixel(lastCell.q, lastCell.r);
           const hexBottom = HEX_HEIGHT / 2;
-          const handleWidth = HEX_SIZE * 1.1;
-          const handleHeight = 50;
-          const curveOutward = 16;
-          const bottomRadius = 12;
+          
+          // Anchor points at hex bottom (left and right sides of hex base)
+          const anchorWidth = HEX_SIZE * 0.8;
+          const anchorLeftX = hexPos.x - anchorWidth / 2;
+          const anchorRightX = hexPos.x + anchorWidth / 2;
+          const anchorY = hexPos.y + hexBottom;
+          
+          // Bubble center follows touch, but offset below for visibility
+          const bubbleX = touchSvgPos.x;
+          const bubbleY = touchSvgPos.y + 25;
+          const bubbleRadius = 22;
+          
+          // Calculate stretch distance for liquid effect
+          const stretchY = Math.max(0, bubbleY - anchorY);
+          const stretchFactor = Math.min(1, stretchY / 100);
+          
+          // Neck width narrows as it stretches
+          const neckWidth = anchorWidth * (0.4 + 0.3 * (1 - stretchFactor));
+          
+          // Bezier control points for liquid curves
+          const midY = anchorY + stretchY * 0.4;
           
           return (
-            <motion.g
-              transform={`translate(${x}, ${y})`}
-              initial={{ opacity: 0, scaleY: 0 }}
-              animate={{ opacity: 1, scaleY: 1 }}
-              style={{ transformOrigin: `0px ${hexBottom}px` }}
-              transition={{ duration: 0.08 }}
-            >
+            <g>
               <path
                 d={`
-                  M ${-handleWidth / 2} ${hexBottom}
-                  C ${-handleWidth / 2 - curveOutward} ${hexBottom}
-                    ${-handleWidth / 2 - curveOutward} ${hexBottom + curveOutward * 1.5}
-                    ${-handleWidth / 2} ${hexBottom + curveOutward * 1.5}
-                  L ${-handleWidth / 2} ${hexBottom + handleHeight - bottomRadius}
-                  Q ${-handleWidth / 2} ${hexBottom + handleHeight}
-                    ${-handleWidth / 2 + bottomRadius} ${hexBottom + handleHeight}
-                  L ${handleWidth / 2 - bottomRadius} ${hexBottom + handleHeight}
-                  Q ${handleWidth / 2} ${hexBottom + handleHeight}
-                    ${handleWidth / 2} ${hexBottom + handleHeight - bottomRadius}
-                  L ${handleWidth / 2} ${hexBottom + curveOutward * 1.5}
-                  C ${handleWidth / 2 + curveOutward} ${hexBottom + curveOutward * 1.5}
-                    ${handleWidth / 2 + curveOutward} ${hexBottom}
-                    ${handleWidth / 2} ${hexBottom}
+                  M ${anchorLeftX} ${anchorY}
+                  C ${anchorLeftX - 8} ${anchorY + 5}
+                    ${bubbleX - neckWidth / 2 - 10} ${midY}
+                    ${bubbleX - neckWidth / 2} ${bubbleY - bubbleRadius * 0.7}
+                  C ${bubbleX - neckWidth / 2 - 5} ${bubbleY}
+                    ${bubbleX - bubbleRadius} ${bubbleY + bubbleRadius * 0.3}
+                    ${bubbleX - bubbleRadius} ${bubbleY + bubbleRadius * 0.3}
+                  A ${bubbleRadius} ${bubbleRadius} 0 1 0 ${bubbleX + bubbleRadius} ${bubbleY + bubbleRadius * 0.3}
+                  C ${bubbleX + bubbleRadius} ${bubbleY + bubbleRadius * 0.3}
+                    ${bubbleX + neckWidth / 2 + 5} ${bubbleY}
+                    ${bubbleX + neckWidth / 2} ${bubbleY - bubbleRadius * 0.7}
+                  C ${bubbleX + neckWidth / 2 + 10} ${midY}
+                    ${anchorRightX + 8} ${anchorY + 5}
+                    ${anchorRightX} ${anchorY}
                   Z
                 `}
                 fill="hsl(var(--primary))"
               />
-            </motion.g>
+            </g>
           );
         })()}
 
