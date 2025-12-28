@@ -456,7 +456,7 @@ export function HexGrid({
                   C ${leftControlX} ${controlY}
                     ${leftX} ${leftY - bubbleRadius * 0.5}
                     ${leftX} ${leftY}
-                  A ${bubbleRadius} ${bubbleRadius} 0 1 0 ${rightX} ${rightY}
+                  A ${bubbleRadius} ${bubbleRadius} 0 1 1 ${rightX} ${rightY}
                   C ${rightX} ${rightY - bubbleRadius * 0.5}
                     ${rightControlX} ${controlY}
                     ${hexBottomRightX} ${topY}
