@@ -371,27 +371,31 @@ export function HexGrid({
         {selectedCells.length > 0 && (() => {
           const lastCell = selectedCells[selectedCells.length - 1];
           const { x, y } = hexToPixel(lastCell.q, lastCell.r);
-          const handleWidth = 28;
-          const handleHeight = 55;
-          const handleTop = HEX_HEIGHT / 2 - 2;
-          const cornerRadius = 10;
+          const hexBottom = HEX_HEIGHT / 2;
+          const handleTopWidth = HEX_SIZE * 1.6;
+          const handleBottomWidth = HEX_SIZE * 1.2;
+          const handleHeight = 50;
+          const cornerRadius = 12;
+          const curveHeight = 12;
           
           return (
             <motion.g
               transform={`translate(${x}, ${y})`}
               initial={{ opacity: 0, scaleY: 0 }}
               animate={{ opacity: 1, scaleY: 1 }}
-              style={{ transformOrigin: `0px ${handleTop}px` }}
+              style={{ transformOrigin: `0px ${hexBottom}px` }}
               transition={{ duration: 0.08 }}
             >
               <path
                 d={`
-                  M ${-handleWidth / 2} ${handleTop}
-                  L ${handleWidth / 2} ${handleTop}
-                  L ${handleWidth / 2} ${handleTop + handleHeight - cornerRadius}
-                  Q ${handleWidth / 2} ${handleTop + handleHeight} ${handleWidth / 2 - cornerRadius} ${handleTop + handleHeight}
-                  L ${-handleWidth / 2 + cornerRadius} ${handleTop + handleHeight}
-                  Q ${-handleWidth / 2} ${handleTop + handleHeight} ${-handleWidth / 2} ${handleTop + handleHeight - cornerRadius}
+                  M ${-handleTopWidth / 2} ${hexBottom}
+                  Q ${-handleTopWidth / 2} ${hexBottom + curveHeight} ${-handleBottomWidth / 2} ${hexBottom + curveHeight}
+                  L ${-handleBottomWidth / 2} ${hexBottom + handleHeight - cornerRadius}
+                  Q ${-handleBottomWidth / 2} ${hexBottom + handleHeight} ${-handleBottomWidth / 2 + cornerRadius} ${hexBottom + handleHeight}
+                  L ${handleBottomWidth / 2 - cornerRadius} ${hexBottom + handleHeight}
+                  Q ${handleBottomWidth / 2} ${hexBottom + handleHeight} ${handleBottomWidth / 2} ${hexBottom + handleHeight - cornerRadius}
+                  L ${handleBottomWidth / 2} ${hexBottom + curveHeight}
+                  Q ${handleTopWidth / 2} ${hexBottom + curveHeight} ${handleTopWidth / 2} ${hexBottom}
                   Z
                 `}
                 fill="hsl(var(--primary))"
