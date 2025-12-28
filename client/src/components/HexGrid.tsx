@@ -422,10 +422,10 @@ export function HexGrid({
           const hexBottomRightX = hexPos.x + HEX_SIZE * 0.5;
           const topY = hexPos.y + hexBottom;
           
-          // Circle centered at touch point
+          // Circle centered BELOW touch point so bottom is below finger
           const bubbleRadius = 20;
           const centerX = touchSvgPos.x;
-          const centerY = touchSvgPos.y;
+          const centerY = touchSvgPos.y + bubbleRadius;
           
           // 5 key points on the circle:
           // - Bottom point (center X, center Y + radius)
