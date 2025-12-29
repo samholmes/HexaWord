@@ -7,7 +7,6 @@ import { GameHeader } from "@/components/GameUI";
 import { GameResult } from "@/components/GameResult";
 import { HexCell } from "@shared/schema";
 import { Loader2, ArrowLeft } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import canvasConfetti from "canvas-confetti";
@@ -23,7 +22,6 @@ export default function Game() {
   const [playerName, setPlayerName] = useState("");
   const [showNameInput, setShowNameInput] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast();
 
   // Load saved name from localStorage on mount
   useEffect(() => {
@@ -106,13 +104,6 @@ export default function Game() {
         setFoundWordsData(prev => [...prev, { word, cells: newSelection }]);
         setSelectedCells([]);
 
-        toast({
-          title: "Word Found!",
-          description: `"${word}"`,
-          className: "bg-green-500 text-white border-none font-bold",
-          duration: 1500,
-        });
-
         if (foundWords.length + 1 === level.words.length) {
           if (timerRef.current) clearInterval(timerRef.current);
           setIsWon(true);
@@ -137,13 +128,6 @@ export default function Game() {
     if (level.words.includes(word) && !foundWords.includes(word)) {
       setFoundWords(prev => [...prev, word]);
       setFoundWordsData(prev => [...prev, { word, cells: [...selectedCells] }]);
-
-      toast({
-        title: "Word Found!",
-        description: `"${word}"`,
-        className: "bg-green-500 text-white border-none font-bold",
-        duration: 1500,
-      });
 
       if (foundWords.length + 1 === level.words.length) {
         if (timerRef.current) clearInterval(timerRef.current);
