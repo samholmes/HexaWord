@@ -152,21 +152,30 @@ export function HexGrid({
   }, [ripples]);
   
   // Calculate ripple effect for a cell based on active ripples
-  const getCellRippleDelay = (cellQ: number, cellR: number): { delay: number; type: 'select' | 'deselect' } | null => {
+  // Returns delay and opacity multiplier based on distance (fades at edges of 4-cell radius)
+  const getCellRippleInfo = (cellQ: number, cellR: number): { delay: number; type: 'select' | 'deselect'; opacity: number } | null => {
     const now = Date.now();
+    const maxRadius = 4;
+    
     for (const ripple of ripples) {
       const age = now - ripple.timestamp;
       if (age < RIPPLE_DURATION + 200) {
         const distance = hexDistance(cellQ, cellR, ripple.q, ripple.r);
+        
+        // Only affect cells within 4-cell radius
+        if (distance > maxRadius) continue;
+        
+        // Fade out opacity as distance approaches max radius
+        const opacity = 1 - (distance / maxRadius) * 0.7;
+        
         // Stagger delay based on distance (50ms per hex distance)
         const baseDelay = distance * 50;
         if (ripple.type === 'select') {
-          return { delay: baseDelay, type: 'select' };
+          return { delay: baseDelay, type: 'select', opacity };
         } else {
           // For deselect, reverse the delay (farther cells animate first)
-          const maxDist = 6;
-          const reverseDelay = (maxDist - distance) * 50;
-          return { delay: Math.max(0, reverseDelay), type: 'deselect' };
+          const reverseDelay = (maxRadius - distance) * 50;
+          return { delay: Math.max(0, reverseDelay), type: 'deselect', opacity };
         }
       }
     }
@@ -523,7 +532,7 @@ export function HexGrid({
           const wordIndices = getWordIndicesForCell(cell);
           const hasFoundWords = wordIndices.length > 0;
 
-          const rippleInfo = getCellRippleDelay(cell.q, cell.r);
+          const rippleInfo = getCellRippleInfo(cell.q, cell.r);
           const rippleKey = ripples.length > 0 ? ripples[0].id : 'none';
 
           return (
@@ -558,7 +567,7 @@ export function HexGrid({
                   points={hexPoints}
                   fill="hsl(270 70% 60%)"
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: [0, 0.4, 0] }}
+                  animate={{ opacity: [0, 0.4 * rippleInfo.opacity, 0] }}
                   transition={{
                     duration: 0.25,
                     delay: rippleInfo.delay / 1000,
