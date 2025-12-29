@@ -12,7 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import canvasConfetti from "canvas-confetti";
 
-// Vibration helper for haptic feedback (works on Android, silent fail on iOS)
+// iOS Safari vibration polyfill (uses checkbox switch trick for iOS 18+)
+import "ios-vibrator-pro-max";
+
+// Vibration helper for haptic feedback (works on Android and iOS 18+)
 const vibrate = (duration: number) => {
   if ('vibrate' in navigator) {
     navigator.vibrate(duration);
