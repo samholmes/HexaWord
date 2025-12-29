@@ -4,13 +4,23 @@ import { cn } from "@/lib/utils";
 import type { HexCell } from "@shared/schema";
 import { useSettings } from "@/hooks/use-settings";
 
-// iOS Safari vibration polyfill (uses checkbox switch trick for iOS 18+)
-import "ios-vibrator-pro-max";
+// iOS Safari haptic feedback using checkbox switch trick
+import { haptic } from "ios-haptics";
 
-// Vibration helper - must be called directly from touch event handlers
+// Vibration helper - uses ios-haptics for iOS, navigator.vibrate for Android
 const vibrate = (duration: number) => {
-  if ('vibrate' in navigator) {
-    navigator.vibrate(duration);
+  // Try iOS haptics first (works on iOS 18+)
+  try {
+    if (duration >= 150) {
+      haptic(); // Standard haptic for longer durations
+    } else {
+      haptic(); // Same haptic for short durations (iOS doesn't support duration control)
+    }
+  } catch (e) {
+    // Fallback to standard vibration API for Android
+    if ('vibrate' in navigator) {
+      navigator.vibrate(duration);
+    }
   }
 };
 
