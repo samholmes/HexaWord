@@ -431,7 +431,21 @@ export function HexGrid({
       
       // Only trigger new selection when distance exceeds hex diameter
       if (distFromLastCenter >= hexDiameter) {
-        const cell = findClosestCell(svgCoords.x, svgCoords.y);
+        // Calculate the selection point: if touch is far away, use a point
+        // along the vector from last center to touch point, clamped to hexDiameter
+        // This ensures we always find a valid neighboring cell even when touch is far
+        let selectionX = svgCoords.x;
+        let selectionY = svgCoords.y;
+        
+        if (distFromLastCenter > hexDiameter) {
+          // Normalize the direction vector and scale to hexDiameter
+          const dirX = (svgCoords.x - lastCenter.x) / distFromLastCenter;
+          const dirY = (svgCoords.y - lastCenter.y) / distFromLastCenter;
+          selectionX = lastCenter.x + dirX * hexDiameter;
+          selectionY = lastCenter.y + dirY * hexDiameter;
+        }
+        
+        const cell = findClosestCell(selectionX, selectionY);
         if (cell) {
           // Update the last selected center to the new cell's center
           const cellPos = cellPositionsRef.current.get(`${cell.q}-${cell.r}`);
