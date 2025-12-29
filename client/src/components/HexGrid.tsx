@@ -1,8 +1,16 @@
-import { useRef, useCallback, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useRef, useCallback, useMemo, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { HexCell } from "@shared/schema";
 import { useSettings } from "@/hooks/use-settings";
+
+interface Ripple {
+  id: string;
+  x: number;
+  y: number;
+  type: 'select' | 'deselect';
+  timestamp: number;
+}
 
 const HEX_SIZE = 40;
 const ZOOM_SCALE = 1.6;
@@ -53,6 +61,7 @@ export function HexGrid({
   const isPointerDownRef = useRef(false);
   const cellPositionsRef = useRef<Map<string, { cell: HexCell; x: number; y: number }>>(new Map());
   const lastSelectedCenterRef = useRef<{ x: number; y: number } | null>(null);
+  const prevSelectedCellsRef = useRef<HexCell[]>([]);
   
   // Load settings
   const { settings } = useSettings();
@@ -61,6 +70,74 @@ export function HexGrid({
   const [isZoomed, setIsZoomed] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isActivelyPanning, setIsActivelyPanning] = useState(false);
+  
+  // Ripple effects state
+  const [ripples, setRipples] = useState<Ripple[]>([]);
+  
+  // Track selection changes for ripple effects
+  useEffect(() => {
+    const prevCells = prevSelectedCellsRef.current;
+    const currentCells = selectedCells;
+    
+    // Find newly selected cells (in current but not in prev)
+    const newlySelected = currentCells.filter(
+      curr => !prevCells.some(prev => prev.q === curr.q && prev.r === curr.r)
+    );
+    
+    // Find deselected cells (in prev but not in current)
+    const deselected = prevCells.filter(
+      prev => !currentCells.some(curr => curr.q === prev.q && curr.r === prev.r)
+    );
+    
+    const newRipples: Ripple[] = [];
+    const now = Date.now();
+    
+    // Create expand ripples for newly selected cells
+    newlySelected.forEach(cell => {
+      const pos = cellPositionsRef.current.get(`${cell.q}-${cell.r}`);
+      if (pos) {
+        newRipples.push({
+          id: `select-${cell.q}-${cell.r}-${now}`,
+          x: pos.x,
+          y: pos.y,
+          type: 'select',
+          timestamp: now,
+        });
+      }
+    });
+    
+    // Create contract ripples for deselected cells
+    deselected.forEach(cell => {
+      const pos = cellPositionsRef.current.get(`${cell.q}-${cell.r}`);
+      if (pos) {
+        newRipples.push({
+          id: `deselect-${cell.q}-${cell.r}-${now}`,
+          x: pos.x,
+          y: pos.y,
+          type: 'deselect',
+          timestamp: now,
+        });
+      }
+    });
+    
+    if (newRipples.length > 0) {
+      setRipples(prev => [...prev, ...newRipples]);
+    }
+    
+    prevSelectedCellsRef.current = currentCells;
+  }, [selectedCells]);
+  
+  // Clean up old ripples after animation completes
+  useEffect(() => {
+    if (ripples.length === 0) return;
+    
+    const timer = setTimeout(() => {
+      const now = Date.now();
+      setRipples(prev => prev.filter(r => now - r.timestamp < 600));
+    }, 600);
+    
+    return () => clearTimeout(timer);
+  }, [ripples]);
 
   const hexToPixel = useCallback((q: number, r: number): Point => {
     const x = HEX_SIZE * (3 / 2 * q) * SPACING;
@@ -405,6 +482,52 @@ export function HexGrid({
           animate={{ pathLength: 1, opacity: 0.5 }}
           transition={{ duration: 0.1 }}
         />
+
+        {/* Ripple effects for selection feedback */}
+        <AnimatePresence>
+          {ripples.map((ripple) => {
+            const maxRadius = HEX_SIZE * 3; // Three hex sizes in radius
+            const isSelect = ripple.type === 'select';
+            
+            return (
+              <g key={ripple.id} transform={`translate(${ripple.x}, ${ripple.y})`}>
+                {/* Three concentric rings */}
+                {[0, 1, 2].map((ringIndex) => {
+                  const delay = ringIndex * 0.08;
+                  const baseRadius = HEX_SIZE * (ringIndex + 1);
+                  
+                  return (
+                    <motion.circle
+                      key={`ring-${ringIndex}`}
+                      cx={0}
+                      cy={0}
+                      r={isSelect ? 0 : maxRadius}
+                      fill="none"
+                      stroke="hsl(270 70% 60%)"
+                      strokeWidth={3 - ringIndex * 0.5}
+                      initial={{
+                        r: isSelect ? 0 : baseRadius,
+                        opacity: isSelect ? 0.8 : 0,
+                        strokeWidth: 3 - ringIndex * 0.5,
+                      }}
+                      animate={{
+                        r: isSelect ? baseRadius : 0,
+                        opacity: isSelect ? [0.8, 0.6, 0] : [0, 0.6, 0.8, 0],
+                        strokeWidth: isSelect ? [3 - ringIndex * 0.5, 1] : [1, 3 - ringIndex * 0.5],
+                      }}
+                      exit={{ opacity: 0 }}
+                      transition={{
+                        duration: 0.5,
+                        delay: delay,
+                        ease: isSelect ? "easeOut" : "easeIn",
+                      }}
+                    />
+                  );
+                })}
+              </g>
+            );
+          })}
+        </AnimatePresence>
 
         {grid.map((cell, idx) => {
           const { x, y } = hexToPixel(cell.q, cell.r);
