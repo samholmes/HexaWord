@@ -4,6 +4,16 @@ import { cn } from "@/lib/utils";
 import type { HexCell } from "@shared/schema";
 import { useSettings } from "@/hooks/use-settings";
 
+// iOS Safari vibration polyfill (uses checkbox switch trick for iOS 18+)
+import "ios-vibrator-pro-max";
+
+// Vibration helper - must be called directly from touch event handlers
+const vibrate = (duration: number) => {
+  if ('vibrate' in navigator) {
+    navigator.vibrate(duration);
+  }
+};
+
 const HEX_SIZE = 40;
 const ZOOM_SCALE = 1.6;
 const FINGER_OFFSET_PX = 70; // Offset so selected cell appears above finger
@@ -34,8 +44,8 @@ interface HexGridProps {
   grid: HexCell[];
   selectedCells: HexCell[];
   foundWords: FoundWord[];
-  onSelectionStart: (cell: HexCell) => void;
-  onSelectionMove: (cell: HexCell) => void;
+  onSelectionStart: (cell: HexCell) => number | null; // Returns vibration duration or null
+  onSelectionMove: (cell: HexCell) => number | null; // Returns vibration duration or null
   onSelectionEnd: () => void;
   isProcessing: boolean;
 }
@@ -281,7 +291,10 @@ export function HexGrid({
         setPanOffset(newPanOffset);
       }
       
-      onSelectionStart(cell);
+      const vibrationDuration = onSelectionStart(cell);
+      if (vibrationDuration) {
+        vibrate(vibrationDuration);
+      }
     }
   };
 
@@ -322,7 +335,10 @@ export function HexGrid({
             const newPanOffset = calculatePanOffset(e.clientX, e.clientY);
             setPanOffset(newPanOffset);
           }
-          onSelectionMove(cell);
+          const vibrationDuration = onSelectionMove(cell);
+          if (vibrationDuration) {
+            vibrate(vibrationDuration);
+          }
         }
       } else {
         // Still update pan offset for smooth tracking even without new selection

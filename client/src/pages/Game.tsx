@@ -12,16 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import canvasConfetti from "canvas-confetti";
 
-// iOS Safari vibration polyfill (uses checkbox switch trick for iOS 18+)
-import "ios-vibrator-pro-max";
-
-// Vibration helper for haptic feedback (works on Android and iOS 18+)
-const vibrate = (duration: number) => {
-  if ('vibrate' in navigator) {
-    navigator.vibrate(duration);
-  }
-};
-
 export default function Game() {
   const [, setLocation] = useLocation();
   const { data: level, isLoading, error, refetch } = useGameStart();
@@ -87,30 +77,28 @@ export default function Game() {
     return isValid;
   };
 
-  const handleSelectionStart = (cell: HexCell) => {
-    if (isWon || showNameInput) return;
-    vibrate(200); // Haptic feedback for new selection
+  const handleSelectionStart = (cell: HexCell): number | null => {
+    if (isWon || showNameInput) return null;
     setSelectedCells([cell]);
+    return 200; // Haptic feedback for new selection
   };
 
-  const handleSelectionMove = (cell: HexCell) => {
-    if (isWon || selectedCells.length === 0 || showNameInput || !level) return;
+  const handleSelectionMove = (cell: HexCell): number | null => {
+    if (isWon || selectedCells.length === 0 || showNameInput || !level) return null;
 
     const lastCell = selectedCells[selectedCells.length - 1];
 
-    if (cell.q === lastCell.q && cell.r === lastCell.r) return;
+    if (cell.q === lastCell.q && cell.r === lastCell.r) return null;
 
     if (selectedCells.length > 1) {
       const prevCell = selectedCells[selectedCells.length - 2];
       if (cell.q === prevCell.q && cell.r === prevCell.r) {
-        vibrate(100); // Haptic feedback for deselection/backtrack
         setSelectedCells(prev => prev.slice(0, -1));
-        return;
+        return 100; // Haptic feedback for deselection/backtrack
       }
     }
 
     if (areNeighbors(lastCell, cell) && !selectedCells.some(c => c.q === cell.q && c.r === cell.r)) {
-      vibrate(200); // Haptic feedback for new cell selection
       const newSelection = [...selectedCells, cell];
       const word = newSelection.map(c => c.letter).join("");
       
@@ -139,7 +127,10 @@ export default function Game() {
       } else {
         setSelectedCells(newSelection);
       }
+      return 200; // Haptic feedback for new cell selection
     }
+    
+    return null;
   };
 
   const handleSelectionEnd = () => {
