@@ -8,7 +8,7 @@ export interface IStorage {
   createScore(score: InsertScore): Promise<Score>;
   getTopScores(limit?: number): Promise<Score[]>;
   getAllScores(): Promise<Score[]>;
-  getScoresByPeriod(period: TimePeriod): Promise<Score[]>;
+  getScoresByPeriod(period: TimePeriod, limit?: number, offset?: number): Promise<Score[]>;
 }
 
 function getDateRange(period: TimePeriod): { start: Date; end: Date } | null {
@@ -51,20 +51,29 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(scores.score));
   }
 
-  async getScoresByPeriod(period: TimePeriod): Promise<Score[]> {
+  async getScoresByPeriod(period: TimePeriod, limit?: number, offset?: number): Promise<Score[]> {
     const range = getDateRange(period);
     
-    if (!range) {
-      return this.getAllScores();
-    }
-    
-    return db.select()
+    let query = db.select()
       .from(scores)
-      .where(and(
+      .orderBy(asc(scores.score));
+    
+    if (range) {
+      query = query.where(and(
         gte(scores.createdAt, range.start),
         lte(scores.createdAt, range.end)
-      ))
-      .orderBy(asc(scores.score));
+      )) as typeof query;
+    }
+    
+    if (limit !== undefined) {
+      query = query.limit(limit) as typeof query;
+    }
+    
+    if (offset !== undefined) {
+      query = query.offset(offset) as typeof query;
+    }
+    
+    return query;
   }
 }
 

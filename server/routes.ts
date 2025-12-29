@@ -465,7 +465,11 @@ export async function registerRoutes(
     const period = (req.query.period as string) || 'all';
     const validPeriods = ['today', 'week', 'month', 'all'];
     const selectedPeriod = validPeriods.includes(period) ? period as 'today' | 'week' | 'month' | 'all' : 'all';
-    const scores = await storage.getScoresByPeriod(selectedPeriod);
+    
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+    const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : undefined;
+    
+    const scores = await storage.getScoresByPeriod(selectedPeriod, limit, offset);
     res.json(scores);
   });
 
