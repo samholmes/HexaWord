@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Medal, Trophy, Calendar, CalendarDays, CalendarRange, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, Medal, Trophy, Clock, CalendarDays, CalendarRange, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -16,23 +16,95 @@ const formatTime = (seconds: number): string => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
-const periods: { key: TimePeriod; label: string; icon: typeof Calendar }[] = [
+const periods: { key: TimePeriod; label: string; icon: typeof Clock }[] = [
   { key: 'today', label: 'Today', icon: Clock },
-  { key: 'week', label: 'Week', icon: CalendarDays },
-  { key: 'month', label: 'Month', icon: CalendarRange },
+  { key: 'week', label: 'This Week', icon: CalendarDays },
+  { key: 'month', label: 'This Month', icon: CalendarRange },
   { key: 'all', label: 'All Time', icon: Trophy },
 ];
 
-export default function Scores() {
-  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('all');
+function LeaderboardSection({ period }: { period: typeof periods[number] }) {
+  const Icon = period.icon;
   
   const { data: scores = [], isLoading } = useQuery<Score[]>({
-    queryKey: [`/api/scores?period=${selectedPeriod}`],
+    queryKey: [`/api/scores?period=${period.key}&limit=5`],
   });
 
   return (
-    <div className="min-h-screen bg-background p-6 md:p-12">
-      <div className="max-w-2xl mx-auto">
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg font-display">
+          <Icon className="w-5 h-5 text-primary" />
+          {period.label}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        {isLoading ? (
+          <div className="p-6 text-center text-muted-foreground text-sm">Loading...</div>
+        ) : scores.length > 0 ? (
+          <>
+            <div className="divide-y divide-border/50">
+              {scores.map((score, index) => (
+                <motion.div
+                  key={score.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={cn(
+                    "flex items-center justify-between gap-3 px-4 py-3",
+                    index === 0 && "bg-gradient-to-r from-yellow-50/50 dark:from-yellow-900/10 to-transparent"
+                  )}
+                  data-testid={`row-score-${period.key}-${score.id}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn(
+                      "w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0",
+                      index === 0 ? "bg-yellow-400 text-yellow-900" :
+                      index === 1 ? "bg-slate-300 dark:bg-slate-600 text-slate-800 dark:text-slate-200" :
+                      index === 2 ? "bg-amber-600 text-amber-100" :
+                      "bg-muted text-muted-foreground"
+                    )}>
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-semibold text-foreground truncate flex items-center gap-1.5">
+                        {score.username}
+                        {index === 0 && <Medal className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500 flex-shrink-0" />}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {score.createdAt ? format(new Date(score.createdAt), 'MMM d') : ''}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="font-display font-bold text-primary font-mono text-sm flex-shrink-0">
+                    {formatTime(score.score)}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            <div className="p-3 border-t border-border/50">
+              <Link href={`/leaderboard/${period.key}`}>
+                <Button variant="ghost" className="w-full gap-2 text-muted-foreground" data-testid={`button-see-all-${period.key}`}>
+                  See All
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="p-6 text-center text-muted-foreground text-sm">
+            No scores yet
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function Scores() {
+  return (
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
           <Link href="/">
             <Button variant="ghost" className="gap-2 font-bold text-muted-foreground">
@@ -42,87 +114,14 @@ export default function Scores() {
           </Link>
           <div className="flex items-center gap-2 text-primary font-display font-black text-xl md:text-2xl uppercase tracking-wider">
             <Trophy className="w-6 h-6 md:w-8 md:h-8 fill-current" />
-            Leaderboard
+            Leaderboards
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {periods.map((period) => {
-            const Icon = period.icon;
-            const isSelected = selectedPeriod === period.key;
-            return (
-              <Button
-                key={period.key}
-                variant={isSelected ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedPeriod(period.key)}
-                className={cn(
-                  "gap-2 font-semibold flex-shrink-0",
-                  isSelected && "shadow-md"
-                )}
-                data-testid={`button-period-${period.key}`}
-              >
-                <Icon className="w-4 h-4" />
-                {period.label}
-              </Button>
-            );
-          })}
-        </div>
-
-        <div className="bg-card dark:bg-card rounded-3xl shadow-xl shadow-black/5 border border-border/50 overflow-hidden">
-          {isLoading ? (
-            <div className="p-12 text-center text-muted-foreground">Loading leaderboard...</div>
-          ) : scores && scores.length > 0 ? (
-            <div className="divide-y divide-border/50">
-              {scores.map((score, index) => {
-                const isTop3 = index < 3;
-                return (
-                  <motion.div
-                    key={score.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className={cn(
-                      "flex items-center justify-between gap-4 p-4 md:p-6 hover:bg-muted/30 transition-colors",
-                      isTop3 && "bg-gradient-to-r from-yellow-50/50 dark:from-yellow-900/10 to-transparent"
-                    )}
-                    data-testid={`row-score-${score.id}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center font-black text-lg flex-shrink-0",
-                        index === 0 ? "bg-yellow-400 text-yellow-900 shadow-lg shadow-yellow-200 dark:shadow-yellow-900/30" :
-                        index === 1 ? "bg-slate-300 dark:bg-slate-600 text-slate-800 dark:text-slate-200" :
-                        index === 2 ? "bg-amber-600 text-amber-100" :
-                        "bg-muted text-muted-foreground"
-                      )}>
-                        {index + 1}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="font-bold text-lg text-foreground flex items-center gap-2 flex-wrap">
-                          <span className="truncate" data-testid={`text-username-${score.id}`}>{score.username}</span>
-                          {isTop3 && <Medal className="w-4 h-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {score.createdAt ? format(new Date(score.createdAt), 'MMM d, yyyy') : 'Unknown Date'}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="font-display font-black text-xl md:text-2xl text-primary font-mono flex-shrink-0" data-testid={`text-time-${score.id}`}>
-                      {formatTime(score.score)}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="p-12 text-center text-muted-foreground">
-              {selectedPeriod === 'today' ? "No scores recorded today yet. Be the first!" :
-               selectedPeriod === 'week' ? "No scores this week yet. Start playing!" :
-               selectedPeriod === 'month' ? "No scores this month yet. Time to play!" :
-               "No times recorded yet. Be the first to play!"}
-            </div>
-          )}
+        <div className="grid gap-4 md:grid-cols-2">
+          {periods.map((period) => (
+            <LeaderboardSection key={period.key} period={period} />
+          ))}
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Game from "@/pages/Game";
 import Scores from "@/pages/Scores";
+import LeaderboardFull from "@/pages/LeaderboardFull";
 
 function Router() {
   return (
@@ -14,6 +15,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/game" component={Game} />
       <Route path="/scores" component={Scores} />
+      <Route path="/leaderboard/:period" component={LeaderboardFull} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -54,26 +54,51 @@ export class DatabaseStorage implements IStorage {
   async getScoresByPeriod(period: TimePeriod, limit?: number, offset?: number): Promise<Score[]> {
     const range = getDateRange(period);
     
-    let query = db.select()
-      .from(scores)
-      .orderBy(asc(scores.score));
-    
     if (range) {
-      query = query.where(and(
-        gte(scores.createdAt, range.start),
-        lte(scores.createdAt, range.end)
-      )) as typeof query;
+      if (limit !== undefined && offset !== undefined) {
+        return db.select()
+          .from(scores)
+          .where(and(
+            gte(scores.createdAt, range.start),
+            lte(scores.createdAt, range.end)
+          ))
+          .orderBy(asc(scores.score))
+          .limit(limit)
+          .offset(offset);
+      } else if (limit !== undefined) {
+        return db.select()
+          .from(scores)
+          .where(and(
+            gte(scores.createdAt, range.start),
+            lte(scores.createdAt, range.end)
+          ))
+          .orderBy(asc(scores.score))
+          .limit(limit);
+      } else {
+        return db.select()
+          .from(scores)
+          .where(and(
+            gte(scores.createdAt, range.start),
+            lte(scores.createdAt, range.end)
+          ))
+          .orderBy(asc(scores.score));
+      }
+    } else {
+      if (limit !== undefined && offset !== undefined) {
+        return db.select()
+          .from(scores)
+          .orderBy(asc(scores.score))
+          .limit(limit)
+          .offset(offset);
+      } else if (limit !== undefined) {
+        return db.select()
+          .from(scores)
+          .orderBy(asc(scores.score))
+          .limit(limit);
+      } else {
+        return this.getAllScores();
+      }
     }
-    
-    if (limit !== undefined) {
-      query = query.limit(limit) as typeof query;
-    }
-    
-    if (offset !== undefined) {
-      query = query.offset(offset) as typeof query;
-    }
-    
-    return query;
   }
 }
 
