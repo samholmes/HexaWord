@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { HexCell } from "@shared/schema";
 import { useSettings } from "@/hooks/use-settings";
-import { playSelectSound, playDeselectSound } from "@/lib/sounds";
+import { playSelectSound, playDeselectSound, resetScalePosition } from "@/lib/sounds";
 
 interface Ripple {
   id: string;
@@ -488,6 +488,7 @@ export function HexGrid({
       setIsActivelyPanning(false); // Re-enable transition for zoom out
       setIsZoomed(false);
       setPanOffset({ x: 0, y: 0 });
+      resetScalePosition();
       onSelectionEnd();
     }
   };
@@ -496,6 +497,7 @@ export function HexGrid({
     e.preventDefault();
     isPointerDownRef.current = false;
     lastSelectedCenterRef.current = null;
+    resetScalePosition();
     setIsActivelyPanning(false);
     setIsZoomed(false);
     setPanOffset({ x: 0, y: 0 });

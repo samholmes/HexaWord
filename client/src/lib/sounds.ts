@@ -60,12 +60,48 @@ function playTone(frequency: number, duration: number, type: OscillatorType = 's
   oscillator.stop(ctx.currentTime + duration);
 }
 
+// C chromatic major scale frequencies (C4 to C5, all semitones)
+const C_CHROMATIC_SCALE = [
+  261.63, // C4
+  277.18, // C#4
+  293.66, // D4
+  311.13, // D#4
+  329.63, // E4
+  349.23, // F4
+  369.99, // F#4
+  392.00, // G4
+  415.30, // G#4
+  440.00, // A4
+  466.16, // A#4
+  493.88, // B4
+  523.25, // C5
+];
+
+// Track current position in the scale
+let scalePosition = 0;
+
 export function playSelectSound() {
-  playTone(880, 0.08, 'sine', 0.12);
+  const frequency = C_CHROMATIC_SCALE[scalePosition];
+  playTone(frequency, 0.12, 'sine', 0.15);
+  
+  // Move up the scale, but cap at the highest note
+  if (scalePosition < C_CHROMATIC_SCALE.length - 1) {
+    scalePosition++;
+  }
 }
 
 export function playDeselectSound() {
-  playTone(440, 0.06, 'sine', 0.08);
+  // Move down the scale first, then play
+  if (scalePosition > 0) {
+    scalePosition--;
+  }
+  
+  const frequency = C_CHROMATIC_SCALE[scalePosition];
+  playTone(frequency, 0.1, 'sine', 0.12);
+}
+
+export function resetScalePosition() {
+  scalePosition = 0;
 }
 
 export function playSuccessSound() {
