@@ -10,10 +10,13 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import canvasConfetti from "canvas-confetti";
+import { playSuccessSound } from "@/lib/sounds";
+import { useSettings } from "@/hooks/use-settings";
 
 export default function Game() {
   const [, setLocation] = useLocation();
   const { data: level, isLoading, error, refetch } = useGameStart();
+  const { settings } = useSettings();
   const [selectedCells, setSelectedCells] = useState<HexCell[]>([]);
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [foundWordsData, setFoundWordsData] = useState<{word: string; cells: HexCell[]}[]>([]);
@@ -21,6 +24,7 @@ export default function Game() {
   const [isWon, setIsWon] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [showNameInput, setShowNameInput] = useState(true);
+  const [wordJustFound, setWordJustFound] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load saved name from localStorage on mount
@@ -102,7 +106,12 @@ export default function Game() {
       if (level.words.includes(word) && !foundWords.includes(word)) {
         setFoundWords(prev => [...prev, word]);
         setFoundWordsData(prev => [...prev, { word, cells: newSelection }]);
+        setWordJustFound(true);
         setSelectedCells([]);
+        if (settings.soundEnabled) {
+          playSuccessSound();
+        }
+        setTimeout(() => setWordJustFound(false), 100);
 
         if (foundWords.length + 1 === level.words.length) {
           if (timerRef.current) clearInterval(timerRef.current);
@@ -128,6 +137,11 @@ export default function Game() {
     if (level.words.includes(word) && !foundWords.includes(word)) {
       setFoundWords(prev => [...prev, word]);
       setFoundWordsData(prev => [...prev, { word, cells: [...selectedCells] }]);
+      setWordJustFound(true);
+      if (settings.soundEnabled) {
+        playSuccessSound();
+      }
+      setTimeout(() => setWordJustFound(false), 100);
 
       if (foundWords.length + 1 === level.words.length) {
         if (timerRef.current) clearInterval(timerRef.current);
@@ -231,6 +245,7 @@ export default function Game() {
           onSelectionMove={handleSelectionMove}
           onSelectionEnd={handleSelectionEnd}
           isProcessing={false}
+          suppressDeselectSound={wordJustFound}
         />
       </div>
 

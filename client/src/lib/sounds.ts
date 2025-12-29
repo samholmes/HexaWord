@@ -67,3 +67,19 @@ export function playSelectSound() {
 export function playDeselectSound() {
   playTone(440, 0.06, 'sine', 0.08);
 }
+
+export function playSuccessSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  if (ctx.state === 'suspended') {
+    ctx.resume();
+  }
+  
+  const notes = [523, 659, 784];
+  notes.forEach((freq, i) => {
+    setTimeout(() => {
+      playTone(freq, 0.15, 'sine', 0.15);
+    }, i * 80);
+  });
+}

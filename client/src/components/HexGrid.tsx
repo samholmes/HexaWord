@@ -55,6 +55,7 @@ interface HexGridProps {
   onSelectionMove: (cell: HexCell) => void;
   onSelectionEnd: () => void;
   isProcessing: boolean;
+  suppressDeselectSound?: boolean;
 }
 
 export function HexGrid({
@@ -64,6 +65,7 @@ export function HexGrid({
   onSelectionStart,
   onSelectionMove,
   onSelectionEnd,
+  suppressDeselectSound = false,
 }: HexGridProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -140,13 +142,13 @@ export function HexGrid({
     if (settings.soundEnabled) {
       if (newlySelected.length > 0) {
         playSelectSound();
-      } else if (deselected.length > 0) {
+      } else if (deselected.length > 0 && !suppressDeselectSound) {
         playDeselectSound();
       }
     }
     
     prevSelectedCellsRef.current = currentCells;
-  }, [selectedCells, settings.rippleEffectEnabled, settings.soundEnabled]);
+  }, [selectedCells, settings.rippleEffectEnabled, settings.soundEnabled, suppressDeselectSound]);
   
   // Clean up old ripples after animation completes
   useEffect(() => {
