@@ -4,7 +4,7 @@ import { useGameStart } from "@/hooks/use-game";
 import { HexGrid } from "@/components/HexGrid";
 import { WordList } from "@/components/WordList";
 import { GameHeader } from "@/components/GameUI";
-import { WinModal } from "@/components/WinModal";
+import { GameResult } from "@/components/GameResult";
 import { HexCell } from "@shared/schema";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -191,13 +191,26 @@ export default function Game() {
     );
   }
 
+  // Show leaderboard scene when game is won
+  if (isWon) {
+    return (
+      <GameResult
+        score={elapsedSeconds}
+        playerName={playerName}
+        onPlayAgain={() => {
+          refetch();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-background">
       
       {/* Name Input Modal */}
       {showNameInput && level && (
         <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-md w-full mx-4">
+          <div className="bg-white dark:bg-card rounded-3xl p-8 shadow-2xl max-w-md w-full mx-4">
             <h2 className="text-3xl font-display font-black mb-2 text-center">Enter Your Name</h2>
             <p className="text-muted-foreground text-center mb-6">Your time will be saved to the leaderboard</p>
             <Input
@@ -263,16 +276,6 @@ export default function Game() {
           />
         </div>
       </div>
-
-      {/* Win Modal */}
-      <WinModal 
-        isOpen={isWon} 
-        score={elapsedSeconds}
-        playerName={playerName}
-        onPlayAgain={() => {
-          refetch();
-        }}
-      />
     </div>
   );
 }
