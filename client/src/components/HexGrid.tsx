@@ -151,11 +151,12 @@ export function HexGrid({
     return () => clearTimeout(timer);
   }, [ripples]);
   
-  // Calculate ripple effect for a cell based on active ripples
-  // Returns delay and opacity multiplier based on distance (fades at edges of 4-cell radius)
-  const getCellRippleInfo = (cellQ: number, cellR: number): { delay: number; type: 'select' | 'deselect'; opacity: number } | null => {
+  // Calculate ripple effects for a cell based on all active ripples
+  // Returns array of ripple info (delay, opacity) for parallel animations
+  const getCellRippleInfos = (cellQ: number, cellR: number): Array<{ id: string; delay: number; type: 'select' | 'deselect'; opacity: number }> => {
     const now = Date.now();
     const maxRadius = 4;
+    const results: Array<{ id: string; delay: number; type: 'select' | 'deselect'; opacity: number }> = [];
     
     for (const ripple of ripples) {
       const age = now - ripple.timestamp;
@@ -171,15 +172,15 @@ export function HexGrid({
         // Stagger delay based on distance (50ms per hex distance)
         const baseDelay = distance * 50;
         if (ripple.type === 'select') {
-          return { delay: baseDelay, type: 'select', opacity };
+          results.push({ id: ripple.id, delay: baseDelay, type: 'select', opacity });
         } else {
           // For deselect, reverse the delay (farther cells animate first)
           const reverseDelay = (maxRadius - distance) * 50;
-          return { delay: Math.max(0, reverseDelay), type: 'deselect', opacity };
+          results.push({ id: ripple.id, delay: Math.max(0, reverseDelay), type: 'deselect', opacity });
         }
       }
     }
-    return null;
+    return results;
   };
 
   const hexToPixel = useCallback((q: number, r: number): Point => {
@@ -532,8 +533,7 @@ export function HexGrid({
           const wordIndices = getWordIndicesForCell(cell);
           const hasFoundWords = wordIndices.length > 0;
 
-          const rippleInfo = getCellRippleInfo(cell.q, cell.r);
-          const rippleKey = ripples.length > 0 ? ripples[0].id : 'none';
+          const rippleInfos = getCellRippleInfos(cell.q, cell.r);
 
           return (
             <g
@@ -560,10 +560,10 @@ export function HexGrid({
                 )}
               />
 
-              {/* Purple ripple overlay effect */}
-              {rippleInfo && !active && (
+              {/* Purple ripple overlay effects - multiple can run in parallel */}
+              {!active && rippleInfos.map((rippleInfo) => (
                 <motion.polygon
-                  key={`ripple-${rippleKey}-${cell.q}-${cell.r}`}
+                  key={`ripple-${rippleInfo.id}-${cell.q}-${cell.r}`}
                   points={hexPoints}
                   fill="hsl(270 70% 60%)"
                   initial={{ opacity: 0 }}
@@ -575,7 +575,7 @@ export function HexGrid({
                   }}
                   style={{ pointerEvents: "none" }}
                 />
-              )}
+              ))}
 
               {/* Transparent color overlays for each found word */}
               {!active && wordIndices.map((wordIdx) => (
