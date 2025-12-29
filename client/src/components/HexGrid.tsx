@@ -567,7 +567,7 @@ export function HexGrid({
                 {[0, 1, 2].map((ringIndex) => {
                   const delay = ringIndex * 0.05;
                   const baseRadius = HEX_SIZE * (ringIndex + 2);
-                  const strokeW = 5 - ringIndex * 0.8;
+                  const strokeW = 8 - ringIndex * 1.5;
                   
                   return (
                     <motion.circle
