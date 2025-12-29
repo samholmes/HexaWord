@@ -461,8 +461,11 @@ export async function registerRoutes(
     res.json(level);
   });
 
-  app.get(api.scores.list.path, async (_req, res) => {
-    const scores = await storage.getAllScores();
+  app.get(api.scores.list.path, async (req, res) => {
+    const period = (req.query.period as string) || 'all';
+    const validPeriods = ['today', 'week', 'month', 'all'];
+    const selectedPeriod = validPeriods.includes(period) ? period as 'today' | 'week' | 'month' | 'all' : 'all';
+    const scores = await storage.getScoresByPeriod(selectedPeriod);
     res.json(scores);
   });
 
