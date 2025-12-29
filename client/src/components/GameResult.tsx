@@ -271,10 +271,11 @@ export function GameResult({ score, playerName, onPlayAgain }: GameResultProps) 
         >
           <Button
             variant="ghost"
+            className="gap-2 font-bold text-muted-foreground"
             onClick={() => setLocation("/")}
             data-testid="button-back-to-menu"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
             Back
           </Button>
         </motion.div>
