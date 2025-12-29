@@ -133,8 +133,8 @@ export function HexGrid({
     
     const timer = setTimeout(() => {
       const now = Date.now();
-      setRipples(prev => prev.filter(r => now - r.timestamp < 600));
-    }, 600);
+      setRipples(prev => prev.filter(r => now - r.timestamp < 400));
+    }, 400);
     
     return () => clearTimeout(timer);
   }, [ripples]);
@@ -558,15 +558,16 @@ export function HexGrid({
         {/* Ripple effects for selection feedback - rendered last to appear on top */}
         <AnimatePresence>
           {ripples.map((ripple) => {
-            const maxRadius = HEX_SIZE * 3; // Three hex sizes in radius
+            const maxRadius = HEX_SIZE * 4; // Four hex sizes in radius
             const isSelect = ripple.type === 'select';
             
             return (
               <g key={ripple.id} transform={`translate(${ripple.x}, ${ripple.y})`}>
                 {/* Three concentric rings */}
                 {[0, 1, 2].map((ringIndex) => {
-                  const delay = ringIndex * 0.08;
-                  const baseRadius = HEX_SIZE * (ringIndex + 1);
+                  const delay = ringIndex * 0.05;
+                  const baseRadius = HEX_SIZE * (ringIndex + 1.5);
+                  const strokeW = 5 - ringIndex * 0.8;
                   
                   return (
                     <motion.circle
@@ -576,20 +577,20 @@ export function HexGrid({
                       r={isSelect ? 0 : maxRadius}
                       fill="none"
                       stroke="hsl(270 70% 60%)"
-                      strokeWidth={3 - ringIndex * 0.5}
+                      strokeWidth={strokeW}
                       initial={{
                         r: isSelect ? 0 : baseRadius,
                         opacity: isSelect ? 0.8 : 0,
-                        strokeWidth: 3 - ringIndex * 0.5,
+                        strokeWidth: strokeW,
                       }}
                       animate={{
                         r: isSelect ? baseRadius : 0,
                         opacity: isSelect ? [0.8, 0.6, 0] : [0, 0.6, 0.8, 0],
-                        strokeWidth: isSelect ? [3 - ringIndex * 0.5, 1] : [1, 3 - ringIndex * 0.5],
+                        strokeWidth: isSelect ? [strokeW, 2] : [2, strokeW],
                       }}
                       exit={{ opacity: 0 }}
                       transition={{
-                        duration: 0.5,
+                        duration: 0.3,
                         delay: delay,
                         ease: isSelect ? "easeOut" : "easeIn",
                       }}
