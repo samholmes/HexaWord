@@ -12,6 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import canvasConfetti from "canvas-confetti";
 
+// Vibration helper for haptic feedback (works on Android, silent fail on iOS)
+const vibrate = (duration: number) => {
+  if ('vibrate' in navigator) {
+    navigator.vibrate(duration);
+  }
+};
+
 export default function Game() {
   const [, setLocation] = useLocation();
   const { data: level, isLoading, error, refetch } = useGameStart();
@@ -79,6 +86,7 @@ export default function Game() {
 
   const handleSelectionStart = (cell: HexCell) => {
     if (isWon || showNameInput) return;
+    vibrate(200); // Haptic feedback for new selection
     setSelectedCells([cell]);
   };
 
@@ -92,12 +100,14 @@ export default function Game() {
     if (selectedCells.length > 1) {
       const prevCell = selectedCells[selectedCells.length - 2];
       if (cell.q === prevCell.q && cell.r === prevCell.r) {
+        vibrate(100); // Haptic feedback for deselection/backtrack
         setSelectedCells(prev => prev.slice(0, -1));
         return;
       }
     }
 
     if (areNeighbors(lastCell, cell) && !selectedCells.some(c => c.q === cell.q && c.r === cell.r)) {
+      vibrate(200); // Haptic feedback for new cell selection
       const newSelection = [...selectedCells, cell];
       const word = newSelection.map(c => c.letter).join("");
       
