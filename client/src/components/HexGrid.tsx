@@ -52,6 +52,7 @@ export function HexGrid({
   const containerRef = useRef<HTMLDivElement>(null);
   const isPointerDownRef = useRef(false);
   const cellPositionsRef = useRef<Map<string, { cell: HexCell; x: number; y: number }>>(new Map());
+  const lastSelectedCenterRef = useRef<{ x: number; y: number } | null>(null);
   
   // Load settings
   const { settings } = useSettings();
@@ -132,7 +133,8 @@ export function HexGrid({
     }).join(" ");
   };
 
-  const findCellAtPoint = (clientX: number, clientY: number, currentZoom: boolean, currentPanOffset: Point): HexCell | null => {
+  // Convert screen coordinates to SVG coordinates
+  const screenToSvg = (clientX: number, clientY: number, currentZoom: boolean, currentPanOffset: Point): { x: number; y: number } | null => {
     const container = containerRef.current;
     if (!container) return null;
 
@@ -201,11 +203,35 @@ export function HexGrid({
     const svgX = touchX * scaleX + (viewBoxData.minX || 0);
     const svgY = touchY * scaleY + (viewBoxData.minY || 0);
 
+    return { x: svgX, y: svgY };
+  };
+
+  // Find the closest cell to a given SVG coordinate
+  const findClosestCell = (svgX: number, svgY: number): HexCell | null => {
+    let closestCell: HexCell | null = null;
+    let closestDist = Infinity;
+
+    cellPositionsRef.current.forEach(({ cell, x, y }) => {
+      const dist = Math.sqrt((svgX - x) ** 2 + (svgY - y) ** 2);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestCell = cell;
+      }
+    });
+
+    // Only return if within a reasonable distance
+    return closestDist < HEX_SIZE * 1.5 ? closestCell : null;
+  };
+
+  const findCellAtPoint = (clientX: number, clientY: number, currentZoom: boolean, currentPanOffset: Point): HexCell | null => {
+    const svgCoords = screenToSvg(clientX, clientY, currentZoom, currentPanOffset);
+    if (!svgCoords) return null;
+
     let closestCell: HexCell | null = null;
     let closestDist = HEX_SIZE * 1.1;
 
     cellPositionsRef.current.forEach(({ cell, x, y }) => {
-      const dist = Math.sqrt((svgX - x) ** 2 + (svgY - y) ** 2);
+      const dist = Math.sqrt((svgCoords.x - x) ** 2 + (svgCoords.y - y) ** 2);
       if (dist < closestDist) {
         closestDist = dist;
         closestCell = cell;
@@ -241,6 +267,12 @@ export function HexGrid({
     // On pointer down, we're not zoomed yet, so pass false and zero offset
     const cell = findCellAtPoint(e.clientX, e.clientY, false, { x: 0, y: 0 });
     if (cell) {
+      // Store the center of the initial selected cell for distance-based detection
+      const cellPos = cellPositionsRef.current.get(`${cell.q}-${cell.r}`);
+      if (cellPos) {
+        lastSelectedCenterRef.current = { x: cellPos.x, y: cellPos.y };
+      }
+      
       setIsActivelyPanning(false); // Allow transition for initial zoom
       
       if (settings.zoomEnabled) {
@@ -261,14 +293,44 @@ export function HexGrid({
     const effectiveZoom = settings.zoomEnabled && isZoomed;
     
     setIsActivelyPanning(true); // Disable transition during panning
-    // Pass current zoom state and pan offset for coordinate transformation
-    const cell = findCellAtPoint(e.clientX, e.clientY, effectiveZoom, panOffset);
-    if (cell) {
-      if (settings.zoomEnabled) {
-        const newPanOffset = calculatePanOffset(e.clientX, e.clientY);
-        setPanOffset(newPanOffset);
+    
+    // Get touch position in SVG coordinates
+    const svgCoords = screenToSvg(e.clientX, e.clientY, effectiveZoom, panOffset);
+    if (!svgCoords) return;
+    
+    // Distance-based selection: only select a new cell when touch moves 
+    // at least one hex diameter away from the last selected cell's center
+    const hexDiameter = HEX_SIZE * 2;
+    const lastCenter = lastSelectedCenterRef.current;
+    
+    if (lastCenter) {
+      const distFromLastCenter = Math.sqrt(
+        (svgCoords.x - lastCenter.x) ** 2 + (svgCoords.y - lastCenter.y) ** 2
+      );
+      
+      // Only trigger new selection when distance exceeds hex diameter
+      if (distFromLastCenter >= hexDiameter) {
+        const cell = findClosestCell(svgCoords.x, svgCoords.y);
+        if (cell) {
+          // Update the last selected center to the new cell's center
+          const cellPos = cellPositionsRef.current.get(`${cell.q}-${cell.r}`);
+          if (cellPos) {
+            lastSelectedCenterRef.current = { x: cellPos.x, y: cellPos.y };
+          }
+          
+          if (settings.zoomEnabled) {
+            const newPanOffset = calculatePanOffset(e.clientX, e.clientY);
+            setPanOffset(newPanOffset);
+          }
+          onSelectionMove(cell);
+        }
+      } else {
+        // Still update pan offset for smooth tracking even without new selection
+        if (settings.zoomEnabled) {
+          const newPanOffset = calculatePanOffset(e.clientX, e.clientY);
+          setPanOffset(newPanOffset);
+        }
       }
-      onSelectionMove(cell);
     }
   };
 
@@ -276,6 +338,7 @@ export function HexGrid({
     e.preventDefault();
     if (isPointerDownRef.current) {
       isPointerDownRef.current = false;
+      lastSelectedCenterRef.current = null;
       setIsActivelyPanning(false); // Re-enable transition for zoom out
       setIsZoomed(false);
       setPanOffset({ x: 0, y: 0 });
@@ -286,6 +349,7 @@ export function HexGrid({
   const handlePointerCancel = (e: React.PointerEvent) => {
     e.preventDefault();
     isPointerDownRef.current = false;
+    lastSelectedCenterRef.current = null;
     setIsActivelyPanning(false);
     setIsZoomed(false);
     setPanOffset({ x: 0, y: 0 });
