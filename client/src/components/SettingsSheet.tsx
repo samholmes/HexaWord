@@ -1,4 +1,4 @@
-import { Settings, RotateCcw, ZoomIn, Hand, Waves } from "lucide-react";
+import { Settings, RotateCcw, ZoomIn, Hand, Waves, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -126,11 +126,40 @@ export function SettingsSheet() {
             />
           </motion.div>
 
+          {/* Sound Effect Setting */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center justify-between p-4 rounded-2xl bg-muted/50 border border-border/50"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/20">
+                <Volume2 className="w-6 h-6 text-white" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="sound-enabled" className="text-base font-semibold cursor-pointer">
+                  Selection Sounds
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Play sounds when selecting cells
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="sound-enabled"
+              checked={settings.soundEnabled}
+              onCheckedChange={(checked) => setSettings({ soundEnabled: checked })}
+              className="data-[state=checked]:bg-green-500"
+              data-testid="switch-sound-enabled"
+            />
+          </motion.div>
+
           {/* Info Box */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.35 }}
             className="p-4 rounded-2xl bg-primary/5 border border-primary/20"
           >
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -143,7 +172,7 @@ export function SettingsSheet() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.45 }}
           >
             <Button
               variant="outline"

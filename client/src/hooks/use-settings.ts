@@ -4,6 +4,7 @@ export interface GameSettings {
   zoomEnabled: boolean;
   fingerOffsetEnabled: boolean;
   rippleEffectEnabled: boolean;
+  soundEnabled: boolean;
 }
 
 const STORAGE_KEY = "hexaword_settings";
@@ -12,6 +13,7 @@ const defaultSettings: GameSettings = {
   zoomEnabled: true,
   fingerOffsetEnabled: false,
   rippleEffectEnabled: true,
+  soundEnabled: true,
 };
 
 function loadSettings(): GameSettings {

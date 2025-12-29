@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { HexCell } from "@shared/schema";
 import { useSettings } from "@/hooks/use-settings";
+import { playSelectSound, playDeselectSound } from "@/lib/sounds";
 
 interface Ripple {
   id: string;
@@ -136,8 +137,16 @@ export function HexGrid({
       setRipples(prev => [...prev, ...newRipples]);
     }
     
+    if (settings.soundEnabled) {
+      if (newlySelected.length > 0) {
+        playSelectSound();
+      } else if (deselected.length > 0) {
+        playDeselectSound();
+      }
+    }
+    
     prevSelectedCellsRef.current = currentCells;
-  }, [selectedCells, settings.rippleEffectEnabled]);
+  }, [selectedCells, settings.rippleEffectEnabled, settings.soundEnabled]);
   
   // Clean up old ripples after animation completes
   useEffect(() => {
