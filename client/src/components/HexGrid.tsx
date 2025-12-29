@@ -4,26 +4,6 @@ import { cn } from "@/lib/utils";
 import type { HexCell } from "@shared/schema";
 import { useSettings } from "@/hooks/use-settings";
 
-// iOS Safari haptic feedback using checkbox switch trick
-import { haptic } from "ios-haptics";
-
-// Vibration helper - uses ios-haptics for iOS, navigator.vibrate for Android
-const vibrate = (duration: number) => {
-  // Try iOS haptics first (works on iOS 18+)
-  try {
-    if (duration >= 150) {
-      haptic(); // Standard haptic for longer durations
-    } else {
-      haptic(); // Same haptic for short durations (iOS doesn't support duration control)
-    }
-  } catch (e) {
-    // Fallback to standard vibration API for Android
-    if ('vibrate' in navigator) {
-      navigator.vibrate(duration);
-    }
-  }
-};
-
 const HEX_SIZE = 40;
 const ZOOM_SCALE = 1.6;
 const FINGER_OFFSET_PX = 70; // Offset so selected cell appears above finger
@@ -54,8 +34,8 @@ interface HexGridProps {
   grid: HexCell[];
   selectedCells: HexCell[];
   foundWords: FoundWord[];
-  onSelectionStart: (cell: HexCell) => number | null; // Returns vibration duration or null
-  onSelectionMove: (cell: HexCell) => number | null; // Returns vibration duration or null
+  onSelectionStart: (cell: HexCell) => void;
+  onSelectionMove: (cell: HexCell) => void;
   onSelectionEnd: () => void;
   isProcessing: boolean;
 }
@@ -301,10 +281,7 @@ export function HexGrid({
         setPanOffset(newPanOffset);
       }
       
-      const vibrationDuration = onSelectionStart(cell);
-      if (vibrationDuration) {
-        vibrate(vibrationDuration);
-      }
+      onSelectionStart(cell);
     }
   };
 
@@ -345,10 +322,7 @@ export function HexGrid({
             const newPanOffset = calculatePanOffset(e.clientX, e.clientY);
             setPanOffset(newPanOffset);
           }
-          const vibrationDuration = onSelectionMove(cell);
-          if (vibrationDuration) {
-            vibrate(vibrationDuration);
-          }
+          onSelectionMove(cell);
         }
       } else {
         // Still update pan offset for smooth tracking even without new selection

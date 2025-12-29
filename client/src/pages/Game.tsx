@@ -77,24 +77,23 @@ export default function Game() {
     return isValid;
   };
 
-  const handleSelectionStart = (cell: HexCell): number | null => {
-    if (isWon || showNameInput) return null;
+  const handleSelectionStart = (cell: HexCell) => {
+    if (isWon || showNameInput) return;
     setSelectedCells([cell]);
-    return 200; // Haptic feedback for new selection
   };
 
-  const handleSelectionMove = (cell: HexCell): number | null => {
-    if (isWon || selectedCells.length === 0 || showNameInput || !level) return null;
+  const handleSelectionMove = (cell: HexCell) => {
+    if (isWon || selectedCells.length === 0 || showNameInput || !level) return;
 
     const lastCell = selectedCells[selectedCells.length - 1];
 
-    if (cell.q === lastCell.q && cell.r === lastCell.r) return null;
+    if (cell.q === lastCell.q && cell.r === lastCell.r) return;
 
     if (selectedCells.length > 1) {
       const prevCell = selectedCells[selectedCells.length - 2];
       if (cell.q === prevCell.q && cell.r === prevCell.r) {
         setSelectedCells(prev => prev.slice(0, -1));
-        return 100; // Haptic feedback for deselection/backtrack
+        return;
       }
     }
 
@@ -127,10 +126,7 @@ export default function Game() {
       } else {
         setSelectedCells(newSelection);
       }
-      return 200; // Haptic feedback for new cell selection
     }
-    
-    return null;
   };
 
   const handleSelectionEnd = () => {
