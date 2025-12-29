@@ -104,6 +104,23 @@ export function resetScalePosition() {
   scalePosition = 0;
 }
 
+export function playIntroSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  if (ctx.state === 'suspended') {
+    ctx.resume();
+  }
+  
+  // Play a quick ascending arpeggio (C major chord)
+  const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+  notes.forEach((freq, i) => {
+    setTimeout(() => {
+      playTone(freq, 0.15, 'sine', 0.12);
+    }, i * 60);
+  });
+}
+
 export function playSuccessSound() {
   const ctx = getAudioContext();
   if (!ctx) return;

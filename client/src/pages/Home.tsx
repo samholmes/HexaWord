@@ -4,6 +4,7 @@ import { Play, Trophy, Hexagon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { SettingsSheet } from "@/components/SettingsSheet";
+import { playIntroSound } from "@/lib/sounds";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -17,10 +18,12 @@ export default function Home() {
   }, []);
 
   const handleStartGame = () => {
+    playIntroSound();
     setLocation("/game");
   };
 
   const handleStartNewGame = () => {
+    playIntroSound();
     localStorage.removeItem("hexaword_player_name");
     setSavedName("");
     setLocation("/game");
