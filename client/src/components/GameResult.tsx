@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Medal, Clock, CalendarDays, CalendarRange, Play, Loader2 } from "lucide-react";
+import { Trophy, Medal, Clock, CalendarDays, CalendarRange, Play, Loader2, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -229,6 +230,7 @@ function LeaderboardSection({
 }
 
 export function GameResult({ score, playerName, onPlayAgain }: GameResultProps) {
+  const [, setLocation] = useLocation();
   const hasSubmittedRef = useRef(false);
   const [currentEntryId, setCurrentEntryId] = useState<number | null>(null);
   const [submittedScore, setSubmittedScore] = useState<Score | null>(null);
@@ -262,6 +264,21 @@ export function GameResult({ score, playerName, onPlayAgain }: GameResultProps) 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 overflow-y-auto">
       <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="mb-4"
+        >
+          <Button
+            variant="ghost"
+            onClick={() => setLocation("/")}
+            data-testid="button-back-to-menu"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back
+          </Button>
+        </motion.div>
+
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

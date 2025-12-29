@@ -255,11 +255,11 @@ export default function Game() {
         <div className="flex items-center justify-between gap-3 px-3 py-1.5 bg-white/50 dark:bg-background/50 backdrop-blur-sm rounded-xl" style={{ pointerEvents: "auto" }}>
           <Button
             variant="ghost"
-            size="icon"
             onClick={() => setLocation("/")}
             data-testid="button-back-to-menu"
           >
             <ArrowLeft className="w-5 h-5" />
+            Back
           </Button>
           <GameHeader 
             elapsedSeconds={elapsedSeconds}
