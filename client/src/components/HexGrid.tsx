@@ -574,25 +574,24 @@ export function HexGrid({
                       key={`ring-${ringIndex}`}
                       cx={0}
                       cy={0}
-                      r={isSelect ? 0 : maxRadius}
                       fill="none"
                       stroke="hsl(270 70% 60%)"
                       strokeWidth={strokeW}
                       initial={{
-                        r: isSelect ? 0 : baseRadius,
-                        opacity: isSelect ? 0.8 : 0,
-                        strokeWidth: strokeW,
+                        r: baseRadius,
+                        opacity: 0,
+                        strokeWidth: 2,
                       }}
                       animate={{
-                        r: isSelect ? baseRadius : 0,
-                        opacity: isSelect ? [0.8, 0.6, 0] : [0, 0.6, 0.8, 0],
-                        strokeWidth: isSelect ? [strokeW, 2] : [2, strokeW],
+                        r: 0,
+                        opacity: [0, 0.7, 0.9, 0],
+                        strokeWidth: strokeW,
                       }}
                       exit={{ opacity: 0 }}
                       transition={{
                         duration: 0.3,
                         delay: delay,
-                        ease: isSelect ? "easeOut" : "easeIn",
+                        ease: "easeIn",
                       }}
                     />
                   );
