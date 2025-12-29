@@ -1,26 +1,63 @@
-const audioContext = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null;
+let audioContext: AudioContext | null = null;
+let isUnlocked = false;
 
-function playTone(frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.15) {
-  if (!audioContext) return;
+function getAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
   
-  if (audioContext.state === 'suspended') {
-    audioContext.resume();
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioContextClass) {
+      audioContext = new AudioContextClass();
+    }
+  }
+  return audioContext;
+}
+
+function unlockAudioContext() {
+  const ctx = getAudioContext();
+  if (!ctx || isUnlocked) return;
+  
+  if (ctx.state === 'suspended') {
+    ctx.resume();
   }
   
-  const oscillator = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
+  const buffer = ctx.createBuffer(1, 1, 22050);
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(ctx.destination);
+  source.start(0);
+  
+  isUnlocked = true;
+}
+
+if (typeof window !== 'undefined') {
+  ['touchstart', 'touchend', 'mousedown', 'click'].forEach(event => {
+    document.addEventListener(event, unlockAudioContext, { once: true, passive: true });
+  });
+}
+
+function playTone(frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.15) {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  if (ctx.state === 'suspended') {
+    ctx.resume();
+  }
+  
+  const oscillator = ctx.createOscillator();
+  const gainNode = ctx.createGain();
   
   oscillator.connect(gainNode);
-  gainNode.connect(audioContext.destination);
+  gainNode.connect(ctx.destination);
   
   oscillator.type = type;
-  oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+  oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
   
-  gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+  gainNode.gain.setValueAtTime(volume, ctx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
   
-  oscillator.start(audioContext.currentTime);
-  oscillator.stop(audioContext.currentTime + duration);
+  oscillator.start(ctx.currentTime);
+  oscillator.stop(ctx.currentTime + duration);
 }
 
 export function playSelectSound() {
