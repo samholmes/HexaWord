@@ -558,7 +558,7 @@ export function HexGrid({
         {/* Ripple effects for selection feedback - rendered last to appear on top */}
         <AnimatePresence>
           {ripples.map((ripple) => {
-            const maxRadius = HEX_SIZE * 4; // Four hex sizes in radius
+            const maxRadius = HEX_SIZE * 6; // Six hex sizes in radius
             const isSelect = ripple.type === 'select';
             
             return (
@@ -566,7 +566,7 @@ export function HexGrid({
                 {/* Three concentric rings */}
                 {[0, 1, 2].map((ringIndex) => {
                   const delay = ringIndex * 0.05;
-                  const baseRadius = HEX_SIZE * (ringIndex + 1.5);
+                  const baseRadius = HEX_SIZE * (ringIndex + 2);
                   const strokeW = 5 - ringIndex * 0.8;
                   
                   return (
