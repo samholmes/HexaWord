@@ -287,7 +287,7 @@ export function GameResult({ score, playerName, onPlayAgain }: GameResultProps) 
           </p>
         </motion.div>
 
-        <div className="grid gap-4 md:grid-cols-2 mb-6">
+        <div className="grid gap-4 md:grid-cols-2">
           {periods.map((period, index) => (
             <motion.div
               key={period.key}
@@ -307,11 +307,18 @@ export function GameResult({ score, playerName, onPlayAgain }: GameResultProps) 
           ))}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
+        {/* Spacer for fixed button */}
+        <div className="h-20" />
+      </div>
+
+      {/* Fixed Play Again button */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t border-border/50"
+      >
+        <div className="max-w-4xl mx-auto">
           <Button
             onClick={onPlayAgain}
             className="w-full h-12 font-bold gap-2 text-lg"
@@ -320,8 +327,8 @@ export function GameResult({ score, playerName, onPlayAgain }: GameResultProps) 
             <Play className="w-5 h-5" />
             Play Again
           </Button>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
