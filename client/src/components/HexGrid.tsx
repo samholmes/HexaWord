@@ -6,6 +6,8 @@ import { useSettings } from "@/hooks/use-settings";
 
 interface Ripple {
   id: string;
+  q: number;
+  r: number;
   x: number;
   y: number;
   type: 'select' | 'deselect';
@@ -18,6 +20,12 @@ const FINGER_OFFSET_PX = 70; // Offset so selected cell appears above finger
 const HEX_WIDTH = HEX_SIZE * 2;
 const HEX_HEIGHT = Math.sqrt(3) * HEX_SIZE;
 const SPACING = 1.08;
+const RIPPLE_DURATION = 400; // ms for ripple animation
+
+// Calculate hex distance between two cells (axial coordinates)
+function hexDistance(q1: number, r1: number, q2: number, r2: number): number {
+  return (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2;
+}
 
 interface Point {
   x: number;
@@ -98,6 +106,8 @@ export function HexGrid({
       if (pos) {
         newRipples.push({
           id: `select-${cell.q}-${cell.r}-${now}`,
+          q: cell.q,
+          r: cell.r,
           x: pos.x,
           y: pos.y,
           type: 'select',
@@ -112,6 +122,8 @@ export function HexGrid({
       if (pos) {
         newRipples.push({
           id: `deselect-${cell.q}-${cell.r}-${now}`,
+          q: cell.q,
+          r: cell.r,
           x: pos.x,
           y: pos.y,
           type: 'deselect',
@@ -133,11 +145,33 @@ export function HexGrid({
     
     const timer = setTimeout(() => {
       const now = Date.now();
-      setRipples(prev => prev.filter(r => now - r.timestamp < 400));
-    }, 400);
+      setRipples(prev => prev.filter(r => now - r.timestamp < RIPPLE_DURATION + 300));
+    }, RIPPLE_DURATION + 300);
     
     return () => clearTimeout(timer);
   }, [ripples]);
+  
+  // Calculate ripple effect for a cell based on active ripples
+  const getCellRippleDelay = (cellQ: number, cellR: number): { delay: number; type: 'select' | 'deselect' } | null => {
+    const now = Date.now();
+    for (const ripple of ripples) {
+      const age = now - ripple.timestamp;
+      if (age < RIPPLE_DURATION + 200) {
+        const distance = hexDistance(cellQ, cellR, ripple.q, ripple.r);
+        // Stagger delay based on distance (50ms per hex distance)
+        const baseDelay = distance * 50;
+        if (ripple.type === 'select') {
+          return { delay: baseDelay, type: 'select' };
+        } else {
+          // For deselect, reverse the delay (farther cells animate first)
+          const maxDist = 6;
+          const reverseDelay = (maxDist - distance) * 50;
+          return { delay: Math.max(0, reverseDelay), type: 'deselect' };
+        }
+      }
+    }
+    return null;
+  };
 
   const hexToPixel = useCallback((q: number, r: number): Point => {
     const x = HEX_SIZE * (3 / 2 * q) * SPACING;
@@ -489,6 +523,9 @@ export function HexGrid({
           const wordIndices = getWordIndicesForCell(cell);
           const hasFoundWords = wordIndices.length > 0;
 
+          const rippleInfo = getCellRippleDelay(cell.q, cell.r);
+          const rippleKey = ripples.length > 0 ? ripples[0].id : 'none';
+
           return (
             <g
               key={`${cell.q}-${cell.r}`}
@@ -513,6 +550,23 @@ export function HexGrid({
                   active ? "text-primary stroke-primary-foreground/20" : "text-card"
                 )}
               />
+
+              {/* Purple ripple overlay effect */}
+              {rippleInfo && !active && (
+                <motion.polygon
+                  key={`ripple-${rippleKey}-${cell.q}-${cell.r}`}
+                  points={hexPoints}
+                  fill="hsl(270 70% 60%)"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 0.4, 0] }}
+                  transition={{
+                    duration: 0.25,
+                    delay: rippleInfo.delay / 1000,
+                    ease: "easeInOut",
+                  }}
+                  style={{ pointerEvents: "none" }}
+                />
+              )}
 
               {/* Transparent color overlays for each found word */}
               {!active && wordIndices.map((wordIdx) => (
@@ -554,52 +608,6 @@ export function HexGrid({
             </g>
           );
         })}
-
-        {/* Ripple effects for selection feedback - rendered last to appear on top */}
-        <AnimatePresence>
-          {ripples.map((ripple) => {
-            const maxRadius = HEX_SIZE * 6; // Six hex sizes in radius
-            const isSelect = ripple.type === 'select';
-            
-            return (
-              <g key={ripple.id} transform={`translate(${ripple.x}, ${ripple.y})`}>
-                {/* Three concentric rings */}
-                {[0, 1, 2].map((ringIndex) => {
-                  const delay = ringIndex * 0.05;
-                  const baseRadius = HEX_SIZE * (ringIndex + 2);
-                  const strokeW = 8 - ringIndex * 1.5;
-                  
-                  return (
-                    <motion.circle
-                      key={`ring-${ringIndex}`}
-                      cx={0}
-                      cy={0}
-                      fill="none"
-                      stroke="hsl(270 70% 60%)"
-                      strokeWidth={strokeW}
-                      initial={{
-                        r: baseRadius,
-                        opacity: 0,
-                        strokeWidth: 2,
-                      }}
-                      animate={{
-                        r: 0,
-                        opacity: [0, 0.7, 0.9, 0],
-                        strokeWidth: strokeW,
-                      }}
-                      exit={{ opacity: 0 }}
-                      transition={{
-                        duration: 0.3,
-                        delay: delay,
-                        ease: "easeIn",
-                      }}
-                    />
-                  );
-                })}
-              </g>
-            );
-          })}
-        </AnimatePresence>
 
       </svg>
     </div>
