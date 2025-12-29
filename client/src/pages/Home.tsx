@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Trophy, Hexagon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { SettingsSheet } from "@/components/SettingsSheet";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -27,6 +28,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden">
+      {/* Settings Button */}
+      <SettingsSheet />
+      
       {/* Background Decor */}
       <div className="absolute inset-0 pointer-events-none opacity-30">
         <motion.div 

@@ -2,6 +2,7 @@ import { useRef, useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { HexCell } from "@shared/schema";
+import { useSettings } from "@/hooks/use-settings";
 
 const HEX_SIZE = 40;
 const ZOOM_SCALE = 1.6;
@@ -51,6 +52,9 @@ export function HexGrid({
   const containerRef = useRef<HTMLDivElement>(null);
   const isPointerDownRef = useRef(false);
   const cellPositionsRef = useRef<Map<string, { cell: HexCell; x: number; y: number }>>(new Map());
+  
+  // Load settings
+  const { settings } = useSettings();
   
   // Zoom and pan state
   const [isZoomed, setIsZoomed] = useState(false);
@@ -128,7 +132,7 @@ export function HexGrid({
     }).join(" ");
   };
 
-  const findCellAtPoint = (clientX: number, clientY: number): HexCell | null => {
+  const findCellAtPoint = (clientX: number, clientY: number, currentZoom: boolean, currentPanOffset: Point): HexCell | null => {
     const container = containerRef.current;
     if (!container) return null;
 
@@ -159,9 +163,37 @@ export function HexGrid({
       offsetY = (containerRect.height - renderedHeight) / 2;
     }
     
-    // Map touch point to viewBox coordinates
-    const touchX = clientX - containerRect.left - offsetX;
-    const touchY = clientY - containerRect.top - offsetY;
+    // Calculate touch position relative to SVG center
+    const containerCenterX = containerRect.width / 2;
+    const containerCenterY = containerRect.height / 2;
+    let touchX = clientX - containerRect.left;
+    let touchY = clientY - containerRect.top;
+    
+    // If zoomed, reverse the CSS transform to get the actual SVG position
+    // Transform is: scale(ZOOM_SCALE) translate(panOffset.x / ZOOM_SCALE, panOffset.y / ZOOM_SCALE)
+    // The transform origin is center center
+    if (currentZoom) {
+      // Reverse the transform: first un-translate, then un-scale
+      // Touch position relative to center
+      const relX = touchX - containerCenterX;
+      const relY = touchY - containerCenterY;
+      
+      // Reverse the scale (divide by zoom)
+      const unscaledX = relX / ZOOM_SCALE;
+      const unscaledY = relY / ZOOM_SCALE;
+      
+      // Reverse the translate (subtract the pan offset, which was divided by ZOOM_SCALE in CSS)
+      const untranslatedX = unscaledX - currentPanOffset.x / ZOOM_SCALE;
+      const untranslatedY = unscaledY - currentPanOffset.y / ZOOM_SCALE;
+      
+      // Convert back to absolute position
+      touchX = untranslatedX + containerCenterX;
+      touchY = untranslatedY + containerCenterY;
+    }
+    
+    // Adjust for letterboxing offset
+    touchX = touchX - offsetX;
+    touchY = touchY - offsetY;
     
     const scaleX = viewBoxData.width / renderedWidth;
     const scaleY = viewBoxData.height / renderedHeight;
@@ -195,9 +227,10 @@ export function HexGrid({
     const touchX = clientX - rect.left;
     const touchY = clientY - rect.top;
     
-    // Zoom to touch point but offset downward so cell appears above finger
+    // Zoom to touch point, optionally offset so cell appears above finger
+    const fingerOffset = settings.fingerOffsetEnabled ? FINGER_OFFSET_PX : 0;
     const offsetX = (centerX - touchX) * (ZOOM_SCALE - 1);
-    const offsetY = (centerY - touchY) * (ZOOM_SCALE - 1) - FINGER_OFFSET_PX;
+    const offsetY = (centerY - touchY) * (ZOOM_SCALE - 1) - fingerOffset;
     
     return { x: offsetX, y: offsetY };
   };
@@ -205,11 +238,17 @@ export function HexGrid({
   const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     isPointerDownRef.current = true;
-    const cell = findCellAtPoint(e.clientX, e.clientY);
+    // On pointer down, we're not zoomed yet, so pass false and zero offset
+    const cell = findCellAtPoint(e.clientX, e.clientY, false, { x: 0, y: 0 });
     if (cell) {
       setIsActivelyPanning(false); // Allow transition for initial zoom
-      setIsZoomed(true);
-      setPanOffset(calculatePanOffset(e.clientX, e.clientY));
+      
+      if (settings.zoomEnabled) {
+        const newPanOffset = calculatePanOffset(e.clientX, e.clientY);
+        setIsZoomed(true);
+        setPanOffset(newPanOffset);
+      }
+      
       onSelectionStart(cell);
     }
   };
@@ -217,10 +256,18 @@ export function HexGrid({
   const handlePointerMove = (e: React.PointerEvent) => {
     e.preventDefault();
     if (!isPointerDownRef.current) return;
+    
+    // Determine effective zoom state based on settings
+    const effectiveZoom = settings.zoomEnabled && isZoomed;
+    
     setIsActivelyPanning(true); // Disable transition during panning
-    const cell = findCellAtPoint(e.clientX, e.clientY);
+    // Pass current zoom state and pan offset for coordinate transformation
+    const cell = findCellAtPoint(e.clientX, e.clientY, effectiveZoom, panOffset);
     if (cell) {
-      setPanOffset(calculatePanOffset(e.clientX, e.clientY));
+      if (settings.zoomEnabled) {
+        const newPanOffset = calculatePanOffset(e.clientX, e.clientY);
+        setPanOffset(newPanOffset);
+      }
       onSelectionMove(cell);
     }
   };
@@ -275,7 +322,7 @@ export function HexGrid({
           height: "auto",
           maxHeight: "100%",
           aspectRatio: `${aspectRatio}`,
-          transform: isZoomed 
+          transform: (settings.zoomEnabled && isZoomed)
             ? `scale(${ZOOM_SCALE}) translate(${panOffset.x / ZOOM_SCALE}px, ${panOffset.y / ZOOM_SCALE}px)`
             : "scale(1) translate(0, 0)",
           transition: isActivelyPanning ? "none" : "transform 0.15s ease-out",
