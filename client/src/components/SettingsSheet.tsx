@@ -1,4 +1,4 @@
-import { Settings, RotateCcw, ZoomIn, Hand } from "lucide-react";
+import { Settings, RotateCcw, ZoomIn, Hand, Waves } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -95,6 +95,34 @@ export function SettingsSheet() {
               checked={settings.fingerOffsetEnabled}
               onCheckedChange={(checked) => setSettings({ fingerOffsetEnabled: checked })}
               className="data-[state=checked]:bg-orange-500"
+            />
+          </motion.div>
+
+          {/* Ripple Effect Setting */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.25 }}
+            className="flex items-center justify-between p-4 rounded-2xl bg-muted/50 border border-border/50"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                <Waves className="w-6 h-6 text-white" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="ripple-enabled" className="text-base font-semibold cursor-pointer">
+                  Ripple Effect
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Show ripple animation on selection
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="ripple-enabled"
+              checked={settings.rippleEffectEnabled}
+              onCheckedChange={(checked) => setSettings({ rippleEffectEnabled: checked })}
+              className="data-[state=checked]:bg-purple-500"
             />
           </motion.div>
 

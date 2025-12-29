@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 export interface GameSettings {
   zoomEnabled: boolean;
   fingerOffsetEnabled: boolean;
+  rippleEffectEnabled: boolean;
 }
 
 const STORAGE_KEY = "hexaword_settings";
@@ -10,6 +11,7 @@ const STORAGE_KEY = "hexaword_settings";
 const defaultSettings: GameSettings = {
   zoomEnabled: true,
   fingerOffsetEnabled: false,
+  rippleEffectEnabled: true,
 };
 
 function loadSettings(): GameSettings {

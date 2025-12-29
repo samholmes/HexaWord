@@ -132,12 +132,12 @@ export function HexGrid({
       }
     });
     
-    if (newRipples.length > 0) {
+    if (newRipples.length > 0 && settings.rippleEffectEnabled) {
       setRipples(prev => [...prev, ...newRipples]);
     }
     
     prevSelectedCellsRef.current = currentCells;
-  }, [selectedCells]);
+  }, [selectedCells, settings.rippleEffectEnabled]);
   
   // Clean up old ripples after animation completes
   useEffect(() => {
