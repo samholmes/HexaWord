@@ -6,12 +6,13 @@ import { WordList } from "@/components/WordList";
 import { GameHeader } from "@/components/GameUI";
 import { GameResult } from "@/components/GameResult";
 import { HexCell } from "@shared/schema";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import canvasConfetti from "canvas-confetti";
 import { playSuccessSound } from "@/lib/sounds";
 import { useSettings } from "@/hooks/use-settings";
+import { SettingsSheet } from "@/components/SettingsSheet";
 
 export default function Game() {
   const [, setLocation] = useLocation();
@@ -261,9 +262,34 @@ export default function Game() {
             <ArrowLeft className="w-4 h-4" />
             Back
           </Button>
-          <GameHeader 
-            elapsedSeconds={elapsedSeconds}
-          />
+          
+          {/* Timer - Centered */}
+          <div className="absolute left-1/2 -translate-x-1/2">
+            <GameHeader 
+              elapsedSeconds={elapsedSeconds}
+            />
+          </div>
+          
+          {/* Right side buttons */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setFoundWords([]);
+                setFoundWordsData([]);
+                setSelectedCells([]);
+                setElapsedSeconds(0);
+                setIsWon(false);
+                refetch();
+              }}
+              data-testid="button-new-game"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span className="sr-only">New Game</span>
+            </Button>
+            <SettingsSheet triggerClassName="rounded-full" />
+          </div>
         </div>
       </div>
 

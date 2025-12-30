@@ -13,8 +13,14 @@ import {
 import { useSettings } from "@/hooks/use-settings";
 import { motion } from "framer-motion";
 
-export function SettingsSheet() {
+interface SettingsSheetProps {
+  triggerClassName?: string;
+}
+
+export function SettingsSheet({ triggerClassName }: SettingsSheetProps) {
   const { settings, setSettings, resetSettings } = useSettings();
+
+  const defaultTriggerClass = "absolute top-6 right-6 z-20 rounded-full w-12 h-12 bg-muted/50 hover:bg-muted backdrop-blur-sm border border-border/50 shadow-lg";
 
   return (
     <Sheet>
@@ -22,7 +28,8 @@ export function SettingsSheet() {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-6 right-6 z-20 rounded-full w-12 h-12 bg-muted/50 hover:bg-muted backdrop-blur-sm border border-border/50 shadow-lg"
+          className={triggerClassName ?? defaultTriggerClass}
+          data-testid="button-settings"
         >
           <Settings className="w-5 h-5" />
           <span className="sr-only">Settings</span>
