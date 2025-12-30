@@ -35,7 +35,7 @@ export function SettingsSheet({ triggerClassName }: SettingsSheetProps) {
           <span className="sr-only">Settings</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:max-w-md">
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader className="pb-6">
           <SheetTitle className="text-2xl font-display flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">

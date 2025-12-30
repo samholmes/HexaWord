@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
 
 export interface GameSettings {
   zoomEnabled: boolean;
@@ -15,6 +15,9 @@ const defaultSettings: GameSettings = {
   rippleEffectEnabled: true,
   soundEnabled: true,
 };
+
+let currentSettings: GameSettings = defaultSettings;
+const listeners = new Set<() => void>();
 
 function loadSettings(): GameSettings {
   if (typeof window === "undefined") return defaultSettings;
@@ -39,25 +42,45 @@ function saveSettings(settings: GameSettings): void {
   }
 }
 
-export function useSettings() {
-  const [settings, setSettingsState] = useState<GameSettings>(loadSettings);
+function notifyListeners() {
+  listeners.forEach((listener) => listener());
+}
 
-  // Sync with localStorage on mount
-  useEffect(() => {
-    setSettingsState(loadSettings());
-  }, []);
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function getSnapshot() {
+  return currentSettings;
+}
+
+function updateSettings(newSettings: Partial<GameSettings>) {
+  currentSettings = { ...currentSettings, ...newSettings };
+  saveSettings(currentSettings);
+  notifyListeners();
+}
+
+function resetToDefaults() {
+  currentSettings = defaultSettings;
+  saveSettings(defaultSettings);
+  notifyListeners();
+}
+
+// Initialize settings on module load
+if (typeof window !== "undefined") {
+  currentSettings = loadSettings();
+}
+
+export function useSettings() {
+  const settings = useSyncExternalStore(subscribe, getSnapshot, () => defaultSettings);
 
   const setSettings = useCallback((newSettings: Partial<GameSettings>) => {
-    setSettingsState((prev) => {
-      const updated = { ...prev, ...newSettings };
-      saveSettings(updated);
-      return updated;
-    });
+    updateSettings(newSettings);
   }, []);
 
   const resetSettings = useCallback(() => {
-    saveSettings(defaultSettings);
-    setSettingsState(defaultSettings);
+    resetToDefaults();
   }, []);
 
   return {
@@ -67,8 +90,6 @@ export function useSettings() {
   };
 }
 
-// Utility to get settings without React (for components that need initial values)
 export function getSettings(): GameSettings {
-  return loadSettings();
+  return currentSettings;
 }
-
