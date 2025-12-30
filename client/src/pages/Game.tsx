@@ -28,64 +28,34 @@ export default function Game() {
   const [playerName, setPlayerName] = useState("");
   const [showNameInput, setShowNameInput] = useState(true);
   const [wordJustFound, setWordJustFound] = useState(false);
-  const [resetHoldProgress, setResetHoldProgress] = useState(0);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const resetHoldRef = useRef<NodeJS.Timeout | null>(null);
-  const resetIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const HOLD_DURATION_MS = 3000;
-  const UPDATE_INTERVAL_MS = 50;
-
-  const handleResetStart = () => {
-    setResetHoldProgress(0);
-    let progress = 0;
-    
-    resetIntervalRef.current = setInterval(() => {
-      progress += (UPDATE_INTERVAL_MS / HOLD_DURATION_MS) * 100;
-      setResetHoldProgress(Math.min(progress, 100));
-    }, UPDATE_INTERVAL_MS);
-    
-    resetHoldRef.current = setTimeout(() => {
-      // Reset complete
-      if (resetIntervalRef.current) clearInterval(resetIntervalRef.current);
-      setResetHoldProgress(0);
-      setFoundWords([]);
-      setFoundWordsData([]);
-      setSelectedCells([]);
-      setElapsedSeconds(0);
-      setIsWon(false);
-      refetch();
-      if (settings.soundEnabled) {
-        playResetSound();
-      }
-      toast({
-        title: "New Game Started",
-        description: "Good luck finding all the words!",
-        variant: "subtle",
-        duration: 3000,
-      });
-    }, HOLD_DURATION_MS);
+  const handleResetClick = () => {
+    setShowResetConfirm(true);
   };
 
-  const handleResetEnd = () => {
-    if (resetHoldRef.current) {
-      clearTimeout(resetHoldRef.current);
-      resetHoldRef.current = null;
+  const handleConfirmReset = () => {
+    setShowResetConfirm(false);
+    setFoundWords([]);
+    setFoundWordsData([]);
+    setSelectedCells([]);
+    setElapsedSeconds(0);
+    setIsWon(false);
+    refetch();
+    if (settings.soundEnabled) {
+      playResetSound();
     }
-    if (resetIntervalRef.current) {
-      clearInterval(resetIntervalRef.current);
-      resetIntervalRef.current = null;
-    }
-    
-    if (resetHoldProgress > 0 && resetHoldProgress < 100) {
-      toast({
-        title: "Hold to Reset",
-        description: "Hold the button for 3 seconds to start a new game",
-        variant: "subtle",
-        duration: 3000,
-      });
-    }
-    setResetHoldProgress(0);
+    toast({
+      title: "New Game Started",
+      description: "Good luck finding all the words!",
+      variant: "subtle",
+      duration: 3000,
+    });
+  };
+
+  const handleCancelReset = () => {
+    setShowResetConfirm(false);
   };
 
   // Load saved name from localStorage on mount
@@ -335,32 +305,9 @@ export default function Game() {
             <Button
               variant="ghost"
               size="icon"
-              className="relative overflow-visible select-none"
-              onMouseDown={handleResetStart}
-              onMouseUp={handleResetEnd}
-              onMouseLeave={handleResetEnd}
-              onTouchStart={handleResetStart}
-              onTouchEnd={handleResetEnd}
-              onContextMenu={(e) => e.preventDefault()}
+              onClick={handleResetClick}
               data-testid="button-new-game"
             >
-              {resetHoldProgress > 0 && (
-                <svg
-                  className="absolute inset-0 w-full h-full -rotate-90"
-                  viewBox="0 0 36 36"
-                >
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeDasharray={`${resetHoldProgress} 100`}
-                    className="text-primary"
-                  />
-                </svg>
-              )}
               <RefreshCw className="w-4 h-4" />
               <span className="sr-only">New Game</span>
             </Button>
@@ -378,6 +325,35 @@ export default function Game() {
           />
         </div>
       </div>
+
+      {/* Reset Confirmation Dialog */}
+      {showResetConfirm && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-background rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl border border-border/50">
+            <h3 className="text-lg font-bold mb-2">Start New Game?</h3>
+            <p className="text-muted-foreground mb-6">
+              Your current progress will be lost. Are you sure you want to start a new game?
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleCancelReset}
+                data-testid="button-cancel-reset"
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleConfirmReset}
+                data-testid="button-confirm-reset"
+              >
+                New Game
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
