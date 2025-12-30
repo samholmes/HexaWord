@@ -10,14 +10,16 @@ import { Loader2, ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import canvasConfetti from "canvas-confetti";
-import { playSuccessSound } from "@/lib/sounds";
+import { playSuccessSound, playResetSound } from "@/lib/sounds";
 import { useSettings } from "@/hooks/use-settings";
 import { SettingsSheet } from "@/components/SettingsSheet";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Game() {
   const [, setLocation] = useLocation();
   const { data: level, isLoading, error, refetch } = useGameStart();
   const { settings } = useSettings();
+  const { toast } = useToast();
   const [selectedCells, setSelectedCells] = useState<HexCell[]>([]);
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [foundWordsData, setFoundWordsData] = useState<{word: string; cells: HexCell[]}[]>([]);
@@ -26,7 +28,61 @@ export default function Game() {
   const [playerName, setPlayerName] = useState("");
   const [showNameInput, setShowNameInput] = useState(true);
   const [wordJustFound, setWordJustFound] = useState(false);
+  const [resetHoldProgress, setResetHoldProgress] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const resetHoldRef = useRef<NodeJS.Timeout | null>(null);
+  const resetIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const HOLD_DURATION_MS = 3000;
+  const UPDATE_INTERVAL_MS = 50;
+
+  const handleResetStart = () => {
+    setResetHoldProgress(0);
+    let progress = 0;
+    
+    resetIntervalRef.current = setInterval(() => {
+      progress += (UPDATE_INTERVAL_MS / HOLD_DURATION_MS) * 100;
+      setResetHoldProgress(Math.min(progress, 100));
+    }, UPDATE_INTERVAL_MS);
+    
+    resetHoldRef.current = setTimeout(() => {
+      // Reset complete
+      if (resetIntervalRef.current) clearInterval(resetIntervalRef.current);
+      setResetHoldProgress(0);
+      setFoundWords([]);
+      setFoundWordsData([]);
+      setSelectedCells([]);
+      setElapsedSeconds(0);
+      setIsWon(false);
+      refetch();
+      if (settings.soundEnabled) {
+        playResetSound();
+      }
+      toast({
+        title: "New Game Started",
+        description: "Good luck finding all the words!",
+      });
+    }, HOLD_DURATION_MS);
+  };
+
+  const handleResetEnd = () => {
+    if (resetHoldRef.current) {
+      clearTimeout(resetHoldRef.current);
+      resetHoldRef.current = null;
+    }
+    if (resetIntervalRef.current) {
+      clearInterval(resetIntervalRef.current);
+      resetIntervalRef.current = null;
+    }
+    
+    if (resetHoldProgress > 0 && resetHoldProgress < 100) {
+      toast({
+        title: "Hold to Reset",
+        description: "Hold the button for 3 seconds to start a new game",
+      });
+    }
+    setResetHoldProgress(0);
+  };
 
   // Load saved name from localStorage on mount
   useEffect(() => {
@@ -275,16 +331,31 @@ export default function Game() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => {
-                setFoundWords([]);
-                setFoundWordsData([]);
-                setSelectedCells([]);
-                setElapsedSeconds(0);
-                setIsWon(false);
-                refetch();
-              }}
+              className="relative overflow-visible"
+              onMouseDown={handleResetStart}
+              onMouseUp={handleResetEnd}
+              onMouseLeave={handleResetEnd}
+              onTouchStart={handleResetStart}
+              onTouchEnd={handleResetEnd}
               data-testid="button-new-game"
             >
+              {resetHoldProgress > 0 && (
+                <svg
+                  className="absolute inset-0 w-full h-full -rotate-90"
+                  viewBox="0 0 36 36"
+                >
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeDasharray={`${resetHoldProgress} 100`}
+                    className="text-primary"
+                  />
+                </svg>
+              )}
               <RefreshCw className="w-4 h-4" />
               <span className="sr-only">New Game</span>
             </Button>

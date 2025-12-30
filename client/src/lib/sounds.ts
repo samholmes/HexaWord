@@ -136,3 +136,31 @@ export function playSuccessSound() {
     }, i * 80);
   });
 }
+
+export function playResetSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  if (ctx.state === 'suspended') {
+    ctx.resume();
+  }
+  
+  // Descending "whoosh" effect followed by rising confirmation
+  const descendNotes = [784, 659, 523, 392];
+  const ascendNotes = [523, 784];
+  
+  descendNotes.forEach((freq, i) => {
+    setTimeout(() => {
+      playTone(freq, 0.08, 'triangle', 0.12);
+    }, i * 50);
+  });
+  
+  // Rising confirmation after descend
+  setTimeout(() => {
+    ascendNotes.forEach((freq, i) => {
+      setTimeout(() => {
+        playTone(freq, 0.15, 'sine', 0.18);
+      }, i * 100);
+    });
+  }, 250);
+}
