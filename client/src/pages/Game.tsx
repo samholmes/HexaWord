@@ -61,6 +61,8 @@ export default function Game() {
       toast({
         title: "New Game Started",
         description: "Good luck finding all the words!",
+        variant: "subtle",
+        duration: 3000,
       });
     }, HOLD_DURATION_MS);
   };
@@ -79,6 +81,8 @@ export default function Game() {
       toast({
         title: "Hold to Reset",
         description: "Hold the button for 3 seconds to start a new game",
+        variant: "subtle",
+        duration: 3000,
       });
     }
     setResetHoldProgress(0);
@@ -331,12 +335,13 @@ export default function Game() {
             <Button
               variant="ghost"
               size="icon"
-              className="relative overflow-visible"
+              className="relative overflow-visible select-none"
               onMouseDown={handleResetStart}
               onMouseUp={handleResetEnd}
               onMouseLeave={handleResetEnd}
               onTouchStart={handleResetStart}
               onTouchEnd={handleResetEnd}
+              onContextMenu={(e) => e.preventDefault()}
               data-testid="button-new-game"
             >
               {resetHoldProgress > 0 && (
